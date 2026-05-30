@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>每週禱告認領表</title>
+<style>
+  :root{
+    --paper:#f4f0e6; --card:#fdfbf5; --ink:#1a1814; --muted:#7d7461;
+    --line:#c9bfa8; --accent:#8a5a2b; --shadow:rgba(40,30,15,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;padding:18px 14px 60px;background:var(--paper);color:var(--ink);
+    font-family:"Noto Serif TC","Songti TC","PingFang TC","Microsoft JhengHei",serif;
+    background-image:repeating-linear-gradient(0deg,transparent,transparent 23px,rgba(0,0,0,.012) 24px);
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+  header{text-align:center;margin-bottom:6px;}
+  h1{margin:0;font-size:24px;letter-spacing:5px;font-weight:600;}
+  .sub{font-family:"PingFang TC",sans-serif;font-size:13px;color:var(--muted);letter-spacing:1px;margin-top:4px;}
+  .weekbar{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0;font-family:"PingFang TC",sans-serif;}
+  select{font-family:inherit;font-size:14px;padding:7px 12px;border-radius:6px;border:1px solid var(--ink);background:var(--card);color:var(--ink);}
+  .iconbtn{border:1px solid var(--line);background:var(--card);border-radius:6px;width:36px;height:36px;cursor:pointer;font-size:16px;color:var(--muted);}
+  .readonly-note{text-align:center;font-family:"PingFang TC",sans-serif;font-size:13px;color:var(--accent);background:#f3e9d8;border:1px dashed var(--line);border-radius:6px;padding:8px;margin-bottom:14px;display:none;}
+  .banner{text-align:center;font-family:"PingFang TC",sans-serif;font-size:13px;background:#fbe3e0;color:#9a2b22;border:1px solid #e3b3ad;border-radius:6px;padding:10px;margin-bottom:14px;display:none;}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  @media(min-width:560px){.grid{grid-template-columns:1fr 1fr;}}
+  .day{background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px var(--shadow);padding:14px 16px;}
+  .day h2{margin:0 0 8px;font-size:17px;letter-spacing:2px;display:flex;align-items:center;justify-content:space-between;}
+  .count{font-family:"PingFang TC",sans-serif;font-size:12px;color:var(--muted);font-weight:400;}
+  .people{display:flex;flex-direction:column;gap:8px;min-height:8px;margin-bottom:10px;}
+  .person{display:flex;align-items:center;gap:10px;font-family:"PingFang TC",sans-serif;font-size:13px;border-bottom:1px dashed #e6dec9;padding-bottom:6px;}
+  .person:last-child{border-bottom:none;padding-bottom:0;}
+  .person img{height:34px;width:auto;max-width:130px;background:#fff;border:1px solid #eee;border-radius:3px;}
+  .person .meta{display:flex;flex-direction:column;line-height:1.3;}
+  .person .nm{font-weight:600;color:var(--ink);}
+  .person .tm{font-size:11px;color:var(--muted);}
+  .empty{font-family:"PingFang TC",sans-serif;font-size:12px;color:#b3a98f;font-style:italic;}
+  .claim{width:100%;font-family:"PingFang TC",sans-serif;font-size:14px;padding:8px;border:1px solid var(--ink);border-radius:6px;background:var(--ink);color:var(--card);cursor:pointer;letter-spacing:1px;}
+  .claim:hover{background:var(--accent);border-color:var(--accent);}
+  .mask{position:fixed;inset:0;background:rgba(26,24,20,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:50;}
+  .modal{background:var(--card);border-radius:10px;width:100%;max-width:480px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.3);}
+  .modal h3{margin:0 0 12px;font-size:18px;letter-spacing:2px;}
+  .modal label{font-family:"PingFang TC",sans-serif;font-size:13px;color:var(--muted);display:block;margin-bottom:6px;}
+  .modal input[type=text]{width:100%;font-family:inherit;font-size:15px;padding:9px 11px;margin-bottom:12px;border:1px solid var(--line);border-radius:6px;background:#fff;}
+  .pad{position:relative;border:1.5px solid var(--ink);border-radius:5px;background:#fff;}
+  #pad{display:block;width:100%;height:190px;touch-action:none;cursor:crosshair;border-radius:5px;}
+  .baseline{position:absolute;left:20px;right:20px;bottom:34px;border-bottom:1px solid var(--line);pointer-events:none;}
+  .baseline span{position:absolute;left:0;bottom:5px;font-size:11px;color:#b3a98f;font-family:"PingFang TC",sans-serif;}
+  .row{display:flex;gap:10px;margin-top:14px;font-family:"PingFang TC",sans-serif;}
+  .row button{flex:1;font-family:inherit;font-size:15px;padding:11px;border-radius:7px;cursor:pointer;letter-spacing:1px;border:1px solid var(--ink);}
+  .btn-ghost{background:#fff;color:var(--ink);}
+  .btn-ghost:hover{background:#f0ece0;}
+  .btn-go{background:var(--ink);color:var(--card);}
+  .btn-go:hover{background:var(--accent);border-color:var(--accent);}
+  .btn-go:disabled{opacity:.4;cursor:not-allowed;}
+  .clearlink{font-family:"PingFang TC",sans-serif;font-size:13px;color:var(--accent);background:none;border:none;cursor:pointer;margin-top:8px;padding:0;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--card);font-family:"PingFang TC",sans-serif;font-size:14px;padding:11px 20px;border-radius:30px;opacity:0;transition:opacity .25s;z-index:60;pointer-events:none;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>每週禱告認領</h1>
+    <div class="sub">請選一天，手寫簽名報名</div>
+  </header>
+
+  <div class="banner" id="cfgBanner">⚠️ 尚未設定後端網址：請打開原始碼，把最上方的 API_URL 換成你的 GAS /exec 網址。</div>
+  <div class="weekbar">
+    <span style="font-family:'PingFang TC',sans-serif;font-size:13px;color:var(--muted)">週次</span>
+    <select id="weekSel"></select>
+    <button class="iconbtn" id="refresh" title="重新整理">⟳</button>
+  </div>
+
+  <div class="readonly-note" id="roNote">📖 歷史紀錄（唯讀）— 切回本週即可報名</div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="mask" id="mask">
+  <div class="modal">
+    <h3 id="mTitle">認領 週日</h3>
+    <label>稱呼（選填）</label>
+    <input type="text" id="nameInput" placeholder="例：張弟兄 / 李姊妹" maxlength="30">
+    <label>簽名</label>
+    <div class="pad">
+      <canvas id="pad"></canvas>
+      <div class="baseline"><span>簽名處</span></div>
+    </div>
+    <button class="clearlink" id="clearPad">清除重簽</button>
+    <div class="row">
+      <button class="btn-ghost" id="cancel">取消</button>
+      <button class="btn-go" id="submit" disabled>送出報名</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====== 設定：把下面換成你的 GAS 網頁應用程式 /exec 網址 ====== */
+const API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTogFcKqJTPySssWscq4yDOPSIEb_FhYL8l17LhDD8FWaZa6L3L6Zhpgk8A5WtWTAnNVl1yMxbwBCFNU6U0XRGGWRa2GiWsl3VKsU7utCF4K3AIcwIAz5ukTxwO25kDTmc7N2XOtKAderJ5IhwOLNL7-oLkntcwEmG18N4MGe2CE03DC8JHh1-w_EZd4pArGDWXjlw3Y71AA5fvWu41QQOdjmJLsOXnu1Qoj6fSGxaq1eddKt-d63BcNvrVTQAMBTwkQXVe5bL3HLtlTcw&lib=MT4OQtk_AA3FQ_BpngRDBapgqPwp_t_ZJ';
+/* ============================================================ */
+
+const DAY_NAMES = ['週日','週一','週二','週三','週四','週五','週六'];
+let CURRENT_WEEK = null, VIEWING_WEEK = null, pollTimer = null;
+
+/* 用 text/plain 送出，避開 GAS 不支援的 CORS 預檢 */
+async function api(payload){
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload),
+    redirect:'follow'
+  });
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || '伺服器錯誤');
+  return json.data;
+}
+
+window.addEventListener('load', () => {
+  if(API_URL.indexOf('PASTE_YOUR') === 0){
+    document.getElementById('cfgBanner').style.display = 'block';
+    return;
+  }
+  api({action:'init'}).then(init).catch(onErr);
+});
+
+function init(data){
+  CURRENT_WEEK = data.currentWeek;
+  VIEWING_WEEK = data.currentWeek;
+  buildWeekSelector(data.weeks);
+  render(data.signups);
+  startPolling();
+}
+
+function buildWeekSelector(weeks){
+  const sel = document.getElementById('weekSel');
+  sel.innerHTML = '';
+  weeks.forEach(w => {
+    const o = document.createElement('option');
+    o.value = w.key;
+    o.textContent = w.isCurrent ? ('本週 ' + w.label) : w.label;
+    sel.appendChild(o);
+  });
+  sel.value = VIEWING_WEEK;
+  sel.onchange = () => loadWeek(sel.value);
+}
+
+function loadWeek(key){
+  VIEWING_WEEK = key;
+  document.getElementById('roNote').style.display = (key === CURRENT_WEEK) ? 'none' : 'block';
+  api({action:'getSignups', week:key}).then(render).catch(onErr);
+}
+
+function render(signups){
+  const grid = document.getElementById('grid');
+  const editable = (VIEWING_WEEK === CURRENT_WEEK);
+  grid.innerHTML = '';
+  for(let d=0; d<7; d++){
+    const list = signups[d] || [];
+    const card = document.createElement('div');
+    card.className = 'day';
+    let html = '<h2>'+DAY_NAMES[d]+'<span class="count">'+(list.length?(list.length+' 人'):'')+'</span></h2><div class="people">';
+    if(list.length){
+      list.forEach(p=>{
+        html += '<div class="person">'
+              + (p.img?'<img src="'+p.img+'" alt="簽名">':'')
+              + '<div class="meta"><span class="nm">'+escapeHtml(p.name)+'</span>'
+              + '<span class="tm">'+escapeHtml(p.time)+'</span></div></div>';
+      });
+    } else {
+      html += '<div class="empty">尚無人認領</div>';
+    }
+    html += '</div>';
+    if(editable){
+      html += '<button class="claim" data-day="'+d+'">＋ 我要認領'+DAY_NAMES[d]+'</button>';
+    }
+    card.innerHTML = html;
+    grid.appendChild(card);
+  }
+  if(editable){
+    grid.querySelectorAll('.claim').forEach(b=>{ b.onclick = ()=>openModal(Number(b.dataset.day)); });
+  }
+}
+
+function startPolling(){
+  clearInterval(pollTimer);
+  pollTimer = setInterval(()=>{
+    if(VIEWING_WEEK === CURRENT_WEEK && document.getElementById('mask').style.display!=='flex'){
+      api({action:'getSignups', week:CURRENT_WEEK}).then(s=>{ if(VIEWING_WEEK===CURRENT_WEEK) render(s); }).catch(()=>{});
+    }
+  }, 30000);
+}
+
+document.getElementById('refresh').onclick = ()=>loadWeek(VIEWING_WEEK);
+
+/* ---------- 簽名 Modal ---------- */
+const mask=document.getElementById('mask'), canvas=document.getElementById('pad'),
+      ctx=canvas.getContext('2d'), submitBtn=document.getElementById('submit');
+let targetDay=null, drawing=false, hasInk=false, last=null;
+
+function openModal(day){
+  targetDay=day;
+  document.getElementById('mTitle').textContent='認領 '+DAY_NAMES[day];
+  document.getElementById('nameInput').value='';
+  mask.style.display='flex';
+  setTimeout(fitCanvas,30);
+}
+function closeModal(){ mask.style.display='none'; }
+document.getElementById('cancel').onclick=closeModal;
+document.getElementById('clearPad').onclick=clearPad;
+
+function fitCanvas(){
+  const ratio=window.devicePixelRatio||1, rect=canvas.getBoundingClientRect();
+  canvas.width=rect.width*ratio; canvas.height=rect.height*ratio;
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,rect.width,rect.height);
+  hasInk=false; submitBtn.disabled=true;
+}
+function clearPad(){
+  const rect=canvas.getBoundingClientRect();
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,rect.width,rect.height);
+  hasInk=false; submitBtn.disabled=true;
+}
+function posOf(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+function start(e){drawing=true;last=posOf(e);ctx.beginPath();ctx.fillStyle='#1a1814';ctx.arc(last.x,last.y,1.4,0,7);ctx.fill();ink();}
+function move(e){if(!drawing)return;const p=posOf(e);ctx.beginPath();ctx.strokeStyle='#1a1814';ctx.lineWidth=2.8;ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;}
+function end(){drawing=false;last=null;}
+function ink(){if(!hasInk){hasInk=true;submitBtn.disabled=false;}}
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);start(e);});
+canvas.addEventListener('pointermove',move);
+canvas.addEventListener('pointerup',end);
+canvas.addEventListener('pointercancel',end);
+
+function exportSignature(){
+  const rect=canvas.getBoundingClientRect();
+  const outW=500, outH=Math.round(outW*rect.height/rect.width);
+  const tmp=document.createElement('canvas'); tmp.width=outW; tmp.height=outH;
+  const t=tmp.getContext('2d');
+  t.fillStyle='#fff'; t.fillRect(0,0,outW,outH);
+  t.drawImage(canvas,0,0,outW,outH);
+  return tmp.toDataURL('image/png');
+}
+
+submitBtn.onclick=()=>{
+  if(!hasInk)return;
+  submitBtn.disabled=true; submitBtn.textContent='送出中…';
+  const name=document.getElementById('nameInput').value;
+  const img=exportSignature();
+  api({action:'submit', day:targetDay, name:name, img:img})
+    .then(s=>{
+      closeModal(); submitBtn.textContent='送出報名';
+      VIEWING_WEEK=CURRENT_WEEK;
+      document.getElementById('weekSel').value=CURRENT_WEEK;
+      document.getElementById('roNote').style.display='none';
+      render(s); toast('已完成認領，感謝您！');
+    })
+    .catch(err=>{ submitBtn.disabled=false; submitBtn.textContent='送出報名'; onErr(err); });
+};
+
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function onErr(err){toast('發生錯誤：'+(err&&err.message?err.message:err));}
+</script>
+</body>
+</html>
