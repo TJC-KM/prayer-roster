@@ -56,7 +56,17 @@ function getSheet_() {
     sh.appendRow(['時間', '週次', '星期(0-6)', '姓名', '簽名圖檔連結', 'fileId', '簽名(base64)']);
     sh.setFrozenRows(1);
   }
+  // 週次欄(B)固定為純文字，避免 Sheet 自動把 '2026-05-24' 轉成日期儲存格
+  sh.getRange('B2:B').setNumberFormat('@');
   return sh;
+}
+
+/** 週次值正規化：Date 物件 → yyyy-MM-dd 字串；其餘去空白 */
+function normWeek_(v) {
+  if (v instanceof Date) {
+    return Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+  return String(v == null ? '' : v).trim();
 }
 
 function getFolder_() {
@@ -94,7 +104,7 @@ function getSignups(weekKey) {
   const data = sh.getRange(2, 1, last - 1, 7).getValues();
   const tz = Session.getScriptTimeZone();
   data.forEach(function (row) {
-    if (String(row[1]) !== weekKey) return;
+    if (normWeek_(row[1]) !== weekKey) return;
     const day = Number(row[2]);
     if (result[day]) {
       result[day].push({
@@ -116,7 +126,8 @@ function getWeekList() {
   set[cur] = true; // 本週一定列出，即使尚無人報名
   if (last >= 2) {
     sh.getRange(2, 2, last - 1, 1).getValues().forEach(function (r) {
-      if (r[0]) set[String(r[0])] = true;
+      const k = normWeek_(r[0]);
+      if (k) set[k] = true;
     });
   }
   return Object.keys(set).sort().reverse().map(function (k) {
