@@ -22,6 +22,11 @@
   .weekbar{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0;font-family:"PingFang TC",sans-serif;}
   select{font-family:inherit;font-size:14px;padding:7px 12px;border-radius:6px;border:1px solid var(--ink);background:var(--card);color:var(--ink);}
   .iconbtn{border:1px solid var(--line);background:var(--card);border-radius:6px;width:36px;height:36px;cursor:pointer;font-size:16px;color:var(--muted);}
+  .iconbtn.spinning{animation:spin .8s linear infinite;color:var(--accent);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  select:disabled{opacity:.6;cursor:wait;}
+  .loadingbox{grid-column:1/-1;text-align:center;font-family:"PingFang TC",sans-serif;font-size:14px;color:var(--accent);padding:34px 0;letter-spacing:1px;}
+  .loadingbox::before{content:"⟳ ";display:inline-block;animation:spin .8s linear infinite;}
   .readonly-note{text-align:center;font-family:"PingFang TC",sans-serif;font-size:13px;color:var(--accent);background:#f3e9d8;border:1px dashed var(--line);border-radius:6px;padding:8px;margin-bottom:14px;display:none;}
   .banner{text-align:center;font-family:"PingFang TC",sans-serif;font-size:13px;background:#fbe3e0;color:#9a2b22;border:1px solid #e3b3ad;border-radius:6px;padding:10px;margin-bottom:14px;display:none;}
   .grid{display:grid;grid-template-columns:1fr;gap:12px;}
@@ -223,7 +228,26 @@ function buildWeekSelector(weeks){
 
 function loadWeek(key){
   VIEWING_WEEK = key;
-  api({action:'getSignups', week:key}).then(render).catch(onErr);
+  setLoading(true);
+  api({action:'getSignups', week:key})
+    .then(s=>{ if(VIEWING_WEEK===key){ render(s); } })
+    .catch(onErr)
+    .finally(()=>{ if(VIEWING_WEEK===key) setLoading(false); });
+}
+
+function setLoading(on){
+  const grid = document.getElementById('grid');
+  const sel = document.getElementById('weekSel');
+  const btn = document.getElementById('refresh');
+  sel.disabled = on;
+  btn.disabled = on;
+  btn.classList.toggle('spinning', on);
+  if(on){
+    grid.classList.add('loading');
+    grid.innerHTML = '<div class="loadingbox">載入中…請稍候</div>';
+  } else {
+    grid.classList.remove('loading');
+  }
 }
 
 function render(signups){
