@@ -417,12 +417,9 @@ document.getElementById('submit').onclick=()=>{
   const btn=document.getElementById('submit'); btn.disabled=true; btn.textContent='送出中…';
   const img=hasInk?exportSignature():'';
   const goal=document.getElementById('goalInput').value;
-  api({action:'submit', day:targetDay, name:name, img:img, mode:claimMode, weeks:weeks, goal:goal})
+  api({action:'submit', day:targetDay, name:name, img:img, mode:claimMode, weeks:weeks, goal:goal, week:VIEWING_WEEK})
     .then(s=>{
       closeModal(); btn.disabled=false; btn.textContent='送出報名';
-      VIEWING_WEEK=CURRENT_WEEK;
-      document.getElementById('weekSel').value=CURRENT_WEEK;
-      document.getElementById('roNote').style.display='none';
       render(s); toast('已完成認領，感謝您！');
     })
     .catch(err=>{ btn.disabled=false; btn.textContent='送出報名'; onErr(err); });

@@ -32,7 +32,7 @@ function doPost(e) {
     switch (req.action) {
       case 'init':       data = getInitialData(); break;
       case 'getSignups': data = getSignups(req.week); break;
-      case 'submit':     data = submitSignup(req.day, req.name, req.img, req.mode, req.weeks, req.goal); break;
+      case 'submit':     data = submitSignup(req.day, req.name, req.img, req.mode, req.weeks, req.goal, req.week); break;
       case 'remove':     data = removeSignup(req.id, req.name); break;
       case 'replaceImg': data = replaceImage(req.id, req.name, req.img); break;
       case 'editGoal':   data = editGoal(req.id, req.name, req.goal); break;
@@ -152,28 +152,38 @@ function getSignups(weekKey) {
 }
 
 /** 週次清單（最早到本週，含有任一認領的週；本週一定列出） */
+const FUTURE_WEEKS = 8; // 往後可預先報名/檢視的週數（約兩個月）
+
 function getWeekList() {
   const sh = getSheet_();
   const last = sh.getLastRow();
   const cur = currentWeekKey_();
-  if (last < 2) return [{ key: cur, label: weekLabel_(cur), isCurrent: true }];
+  const tz = Session.getScriptTimeZone();
+  const rows = (last >= 2) ? sh.getRange(2, 1, last - 1, HEADERS.length).getValues() : [];
 
-  const rows = sh.getRange(2, 1, last - 1, HEADERS.length).getValues();
-  // 找最早起始週
+  // 最早起始週（過去也納入有資料的週）
   let minKey = cur;
   rows.forEach(function (row) {
     const s = normWeek_(row[COL.start - 1]);
     if (s && s < minKey) minKey = s;
   });
+  // 未來上限 = 本週 + FUTURE_WEEKS 週
+  const futureLimit = Utilities.formatDate(
+    new Date(parseKey_(cur).getTime() + FUTURE_WEEKS * 7 * 86400000), tz, 'yyyy-MM-dd');
 
   const out = [];
   let k = minKey;
   let guard = 0;
-  while (k <= cur && guard < 520) { // 上限約 10 年，安全閥
+  while (k <= futureLimit && guard < 600) {
+    const isCur = (k === cur);
+    const isFuture = (k > cur);
     const hasAny = rows.some(function (row) { return rowVisibleOn_(row, k); });
-    if (hasAny || k === cur) out.push({ key: k, label: weekLabel_(k), isCurrent: k === cur });
+    // 過去週要有資料才列；本週與未來週一律列出（可預先報名）
+    if (hasAny || isCur || isFuture) {
+      out.push({ key: k, label: weekLabel_(k), isCurrent: isCur, isFuture: isFuture });
+    }
     const next = new Date(parseKey_(k).getTime() + 7 * 86400000);
-    k = Utilities.formatDate(next, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    k = Utilities.formatDate(next, tz, 'yyyy-MM-dd');
     guard++;
   }
   return out.sort(function (a, b) { return a.key < b.key ? 1 : -1; });
@@ -256,7 +266,7 @@ function saveImage_(name, day, week, imageDataUrl) {
 }
 
 /** 報名：day 0-6、name、img(可空)、mode('once'|'fixed'|'nweeks')、weeks(N) */
-function submitSignup(day, name, img, mode, weeks, goal) {
+function submitSignup(day, name, img, mode, weeks, goal, week) {
   day = Number(day);
   name = (name || '').toString().trim().slice(0, 30);
   goal = (goal == null ? '' : String(goal)).trim().slice(0, 200);
@@ -265,7 +275,9 @@ function submitSignup(day, name, img, mode, weeks, goal) {
   if (img && img.indexOf('data:image/png;base64,') !== 0) throw new Error('簽名圖無效');
 
   const m = decodeMode_(mode, weeks);
-  const week = currentWeekKey_();
+  const cur = currentWeekKey_();
+  week = normWeek_(week) || cur;
+  if (week < cur) throw new Error('不能報名過去的週次');
   const saved = saveImage_(name, day, week, img);
 
   getSheet_().appendRow([
