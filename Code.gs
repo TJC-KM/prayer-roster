@@ -14,9 +14,9 @@ const PRAYER_SHEET = '代禱事項';   // 單一共用代禱文字，存於另�
 const FOLDER_NAME = '禱告認領簽名';
 const DAY_LABELS  = ['日', '一', '二', '三', '四', '五', '六']; // 0=週日 ... 6=週六
 
-// 欄位（1-indexed）：A id, B 建立時間, C 類型, D 起始週, E 週數, F 星期, G 姓名, H 圖(base64), I 圖連結, J fileId, K 狀態
-const COL = { id:1, created:2, type:3, start:4, weeks:5, day:6, name:7, img:8, link:9, fileId:10, status:11 };
-const HEADERS = ['id','建立時間','類型','起始週','週數(0=無限)','星期(0-6)','姓名','圖(base64)','圖檔連結','fileId','狀態'];
+// 欄位（1-indexed）：A id, B 建立時間, C 類型, D 起始週, E 週數, F 星期, G 姓名, H 圖, I 圖連結, J fileId, K 狀態, L 禱告目標
+const COL = { id:1, created:2, type:3, start:4, weeks:5, day:6, name:7, img:8, link:9, fileId:10, status:11, goal:12 };
+const HEADERS = ['id','建立時間','類型','起始週','週數(0=無限)','星期(0-6)','姓名','圖','圖檔連結','fileId','狀態','禱告目標'];
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('index')
@@ -32,7 +32,7 @@ function doPost(e) {
     switch (req.action) {
       case 'init':       data = getInitialData(); break;
       case 'getSignups': data = getSignups(req.week); break;
-      case 'submit':     data = submitSignup(req.day, req.name, req.img, req.mode, req.weeks); break;
+      case 'submit':     data = submitSignup(req.day, req.name, req.img, req.mode, req.weeks, req.goal); break;
       case 'remove':     data = removeSignup(req.id, req.name); break;
       case 'replaceImg': data = replaceImage(req.id, req.name, req.img); break;
       case 'getPrayer':  data = getPrayer(); break;
@@ -142,6 +142,7 @@ function getSignups(weekKey) {
       name: row[COL.name - 1],
       time: row[COL.created - 1] ? Utilities.formatDate(new Date(row[COL.created - 1]), tz, 'MM/dd HH:mm') : '',
       img: row[COL.img - 1],
+      goal: row[COL.goal - 1] || '',
       type: type,
       badge: badgeOf_(type, row[COL.weeks - 1])
     });
@@ -254,9 +255,10 @@ function saveImage_(name, day, week, imageDataUrl) {
 }
 
 /** 報名：day 0-6、name、img(可空)、mode('once'|'fixed'|'nweeks')、weeks(N) */
-function submitSignup(day, name, img, mode, weeks) {
+function submitSignup(day, name, img, mode, weeks, goal) {
   day = Number(day);
   name = (name || '').toString().trim().slice(0, 30);
+  goal = (goal == null ? '' : String(goal)).trim().slice(0, 200);
   if (day < 0 || day > 6) throw new Error('星期錯誤');
   if (!name) throw new Error('請輸入稱呼');
   if (img && img.indexOf('data:image/png;base64,') !== 0) throw new Error('簽名圖無效');
@@ -267,7 +269,7 @@ function submitSignup(day, name, img, mode, weeks) {
 
   getSheet_().appendRow([
     Utilities.getUuid(), new Date(), m.type, week, m.weeks, day, name,
-    saved.cell, saved.link, saved.fileId, 'active'
+    saved.cell, saved.link, saved.fileId, 'active', goal
   ]);
   return getSignups(week);
 }

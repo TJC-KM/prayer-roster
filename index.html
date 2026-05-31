@@ -35,6 +35,7 @@
   .person img{height:40px;width:auto;max-width:140px;background:#fff;border:1px solid #eee;border-radius:3px;}
   .person .meta{display:flex;flex-direction:column;line-height:1.35;flex:1;min-width:0;}
   .person .nm{font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .person .goal{font-size:12px;color:var(--accent);margin:1px 0;}
   .person .tm{font-size:11px;color:var(--muted);}
   .badge{font-size:10px;font-family:"PingFang TC",sans-serif;background:#efe2c8;color:var(--accent);border:1px solid var(--line);border-radius:10px;padding:1px 7px;letter-spacing:1px;}
   .acts{display:flex;gap:6px;}
@@ -137,6 +138,9 @@
         <input type="number" id="weeksInput" min="1" max="52" value="4">
         <span>週</span>
       </div>
+
+      <label>個人禱告目標（選填）</label>
+      <input type="text" id="goalInput" placeholder="例：為家人信主禱告" maxlength="200">
     </div>
 
     <label id="drawLabel">畫圖 / 簽名（選填）</label>
@@ -239,7 +243,9 @@ function render(signups){
               + (p.img?'<img src="'+p.img+'" alt="圖" data-zoom="'+p.img+'">':'')
               + '<div class="meta"><span class="nm">'+escapeHtml(p.name)
               + (p.badge?'<span class="badge">'+escapeHtml(p.badge)+'</span>':'')
-              + '</span><span class="tm">'+escapeHtml(p.time)+'</span></div>'
+              + '</span>'
+              + (p.goal?'<span class="goal">🙏 '+escapeHtml(p.goal)+'</span>':'')
+              + '<span class="tm">'+escapeHtml(p.time)+'</span></div>'
               + (editable ? '<div class="acts">'
                   + '<button class="miniicon" title="換圖" data-act="img" data-id="'+escapeHtml(p.id)+'" data-name="'+escapeHtml(p.name)+'">🖼</button>'
                   + '<button class="miniicon" title="刪除" data-act="del" data-id="'+escapeHtml(p.id)+'" data-name="'+escapeHtml(p.name)+'">✕</button>'
@@ -298,6 +304,7 @@ function openClaim(day){
   document.getElementById('claimFields').style.display='block';
   document.getElementById('mTitle').textContent='認領 '+DAY_NAMES[day];
   document.getElementById('nameInput').value='';
+  document.getElementById('goalInput').value='';
   document.querySelectorAll('.modebtn').forEach(x=>x.classList.toggle('on', x.dataset.mode==='once'));
   document.getElementById('nweeksRow').style.display='none';
   document.getElementById('drawLabel').textContent='畫圖 / 簽名（選填）';
@@ -407,7 +414,8 @@ document.getElementById('submit').onclick=()=>{
   }
   const btn=document.getElementById('submit'); btn.disabled=true; btn.textContent='送出中…';
   const img=hasInk?exportSignature():'';
-  api({action:'submit', day:targetDay, name:name, img:img, mode:claimMode, weeks:weeks})
+  const goal=document.getElementById('goalInput').value;
+  api({action:'submit', day:targetDay, name:name, img:img, mode:claimMode, weeks:weeks, goal:goal})
     .then(s=>{
       closeModal(); btn.disabled=false; btn.textContent='送出報名';
       VIEWING_WEEK=CURRENT_WEEK;
