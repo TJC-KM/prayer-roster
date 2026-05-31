@@ -129,8 +129,8 @@
 
       <label>認領期間</label>
       <div class="modes">
-        <button class="modebtn on" data-mode="once">只報這週</button>
-        <button class="modebtn" data-mode="fixed">每週固定</button>
+        <button class="modebtn" data-mode="once">只報這週</button>
+        <button class="modebtn on" data-mode="fixed">每週固定</button>
         <button class="modebtn" data-mode="nweeks">指定週數</button>
       </div>
       <div class="nweeks" id="nweeksRow">
@@ -143,7 +143,7 @@
       <input type="text" id="goalInput" placeholder="例：為家人信主禱告" maxlength="200">
     </div>
 
-    <label id="drawLabel">畫圖 / 簽名（選填）</label>
+    <label id="drawLabel">畫圖（選填）</label>
     <div class="tools">
       <div class="swatches" id="swatches"></div>
       <div class="sizes" id="sizes"></div>
@@ -311,14 +311,14 @@ document.querySelectorAll('.modebtn').forEach(b=>{
 
 function openClaim(day){
   dialogMode='claim';
-  targetDay=day; claimMode='once';
+  targetDay=day; claimMode='fixed';
   document.getElementById('claimFields').style.display='block';
   document.getElementById('mTitle').textContent='認領 '+DAY_NAMES[day];
   document.getElementById('nameInput').value='';
   document.getElementById('goalInput').value='';
-  document.querySelectorAll('.modebtn').forEach(x=>x.classList.toggle('on', x.dataset.mode==='once'));
+  document.querySelectorAll('.modebtn').forEach(x=>x.classList.toggle('on', x.dataset.mode==='fixed'));
   document.getElementById('nweeksRow').style.display='none';
-  document.getElementById('drawLabel').textContent='畫圖 / 簽名（選填）';
+  document.getElementById('drawLabel').textContent='畫圖（選填）';
   document.getElementById('drawHint').style.display='block';
   document.getElementById('submit').textContent='送出報名';
   mask.style.display='flex';
