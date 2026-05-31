@@ -247,6 +247,7 @@ function render(signups){
               + (p.goal?'<span class="goal">🙏 '+escapeHtml(p.goal)+'</span>':'')
               + '<span class="tm">'+escapeHtml(p.time)+'</span></div>'
               + (editable ? '<div class="acts">'
+                  + '<button class="miniicon" title="改目標" data-act="goal" data-id="'+escapeHtml(p.id)+'" data-name="'+escapeHtml(p.name)+'" data-goal="'+escapeHtml(p.goal||'')+'">🙏</button>'
                   + '<button class="miniicon" title="換圖" data-act="img" data-id="'+escapeHtml(p.id)+'" data-name="'+escapeHtml(p.name)+'">🖼</button>'
                   + '<button class="miniicon" title="刪除" data-act="del" data-id="'+escapeHtml(p.id)+'" data-name="'+escapeHtml(p.name)+'">✕</button>'
                   + '</div>' : '')
@@ -267,6 +268,7 @@ function render(signups){
     grid.querySelectorAll('.miniicon').forEach(b=>{
       b.onclick = ()=>{
         if(b.dataset.act==='del') doDelete(b.dataset.id, b.dataset.name);
+        else if(b.dataset.act==='goal') doEditGoal(b.dataset.id, b.dataset.name, b.dataset.goal);
         else openReplace(b.dataset.id, b.dataset.name);
       };
     });
@@ -425,6 +427,14 @@ document.getElementById('submit').onclick=()=>{
     })
     .catch(err=>{ btn.disabled=false; btn.textContent='送出報名'; onErr(err); });
 };
+
+function doEditGoal(id, name, cur){
+  const input=prompt('修改「'+name+'」的個人禱告目標：', cur||'');
+  if(input===null) return;
+  api({action:'editGoal', id:id, name:name, goal:input.trim()})
+    .then(s=>{ render(s); toast('已更新禱告目標'); })
+    .catch(onErr);
+}
 
 function doDelete(id, name){
   const input=prompt('要刪除「'+name+'」的這筆認領，請輸入相同稱呼確認：','');

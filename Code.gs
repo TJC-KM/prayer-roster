@@ -35,6 +35,7 @@ function doPost(e) {
       case 'submit':     data = submitSignup(req.day, req.name, req.img, req.mode, req.weeks, req.goal); break;
       case 'remove':     data = removeSignup(req.id, req.name); break;
       case 'replaceImg': data = replaceImage(req.id, req.name, req.img); break;
+      case 'editGoal':   data = editGoal(req.id, req.name, req.goal); break;
       case 'getPrayer':  data = getPrayer(); break;
       case 'savePrayer': data = savePrayer(req.text); break;
       default: throw new Error('未知的動作：' + req.action);
@@ -309,5 +310,17 @@ function replaceImage(id, name, img) {
   sh.getRange(r, COL.img).setValue(saved.cell);
   sh.getRange(r, COL.link).setValue(saved.link);
   sh.getRange(r, COL.fileId).setValue(saved.fileId);
+  return getSignups(currentWeekKey_());
+}
+
+/** 修改個人禱告目標，需姓名相符 */
+function editGoal(id, name, goal) {
+  goal = (goal == null ? '' : String(goal)).trim().slice(0, 200);
+  const sh = getSheet_();
+  const r = findRowById_(sh, id);
+  if (r < 0) throw new Error('找不到該筆認領');
+  const rowName = String(sh.getRange(r, COL.name).getValue()).trim();
+  if (rowName !== (name || '').toString().trim()) throw new Error('姓名不符，無法修改');
+  sh.getRange(r, COL.goal).setValue(goal);
   return getSignups(currentWeekKey_());
 }
