@@ -223,13 +223,22 @@ function buildWeekSelector(weeks){
 
 function loadWeek(key){
   VIEWING_WEEK = key;
-  document.getElementById('roNote').style.display = (key === CURRENT_WEEK) ? 'none' : 'block';
   api({action:'getSignups', week:key}).then(render).catch(onErr);
 }
 
 function render(signups){
   const grid = document.getElementById('grid');
-  const editable = (VIEWING_WEEK === CURRENT_WEEK);
+  const editable = (VIEWING_WEEK >= CURRENT_WEEK); // 本週與未來週可報名，過去週唯讀
+  const note = document.getElementById('roNote');
+  if(VIEWING_WEEK < CURRENT_WEEK){
+    note.textContent = '📖 歷史紀錄（唯讀）— 切回本週即可報名';
+    note.style.display = 'block';
+  } else if(VIEWING_WEEK > CURRENT_WEEK){
+    note.textContent = '📅 未來週 — 可預先報名';
+    note.style.display = 'block';
+  } else {
+    note.style.display = 'none';
+  }
   grid.innerHTML = '';
   for(let d=0; d<7; d++){
     const list = signups[d] || [];
