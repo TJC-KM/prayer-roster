@@ -277,10 +277,10 @@ function render(signups){
               + '<div class="meta"><span class="nm">'+escapeHtml(p.name)
               + (p.badge?'<span class="badge">'+escapeHtml(p.badge)+'</span>':'')
               + '</span>'
-              + (p.goal?'<span class="goal">🙏 '+escapeHtml(p.goal)+'</span>':'')
+              + (p.goal?'<span class="goal">🎯 '+escapeHtml(p.goal)+'</span>':'')
               + '<span class="tm">'+escapeHtml(p.time)+'</span></div>'
               + (editable ? '<div class="acts">'
-                  + '<button class="miniicon" title="改目標" data-act="goal" data-id="'+escapeHtml(p.id)+'" data-name="'+escapeHtml(p.name)+'" data-goal="'+escapeHtml(p.goal||'')+'">🙏</button>'
+                  + '<button class="miniicon" title="改目標" data-act="goal" data-id="'+escapeHtml(p.id)+'" data-name="'+escapeHtml(p.name)+'" data-goal="'+escapeHtml(p.goal||'')+'">🎯</button>'
                   + '<button class="miniicon" title="換圖" data-act="img" data-id="'+escapeHtml(p.id)+'" data-name="'+escapeHtml(p.name)+'">🖼</button>'
                   + '<button class="miniicon" title="刪除" data-act="del" data-id="'+escapeHtml(p.id)+'" data-name="'+escapeHtml(p.name)+'">✕</button>'
                   + '</div>' : '')
