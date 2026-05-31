@@ -72,8 +72,8 @@
   .toolbtn{font-family:"PingFang TC",sans-serif;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--muted);}
   .toolbtn:hover{background:#f0ece0;color:var(--accent);}
   .pad{position:relative;border:1.5px solid var(--ink);border-radius:5px;background:#fff;}
-  #pad{display:block;width:100%;height:300px;touch-action:none;cursor:crosshair;border-radius:5px;}
-  .row{display:flex;gap:10px;margin-top:14px;font-family:"PingFang TC",sans-serif;}
+  #pad{display:block;width:100%;height:clamp(130px,26vh,300px);touch-action:none;cursor:crosshair;border-radius:5px;}
+  .row{display:flex;gap:10px;margin-top:14px;font-family:"PingFang TC",sans-serif;position:sticky;bottom:-18px;background:var(--card);padding:10px 0;border-top:1px solid var(--line);}
   .row button{flex:1;font-family:inherit;font-size:15px;padding:11px;border-radius:7px;cursor:pointer;letter-spacing:1px;border:1px solid var(--ink);}
   .btn-ghost{background:#fff;color:var(--ink);}
   .btn-ghost:hover{background:#f0ece0;}
@@ -129,7 +129,7 @@
 <!-- 報名 / 換圖 視窗 -->
 <div class="mask" id="mask">
   <div class="modal">
-    <h3 id="mTitle">認領 週日</h3>
+    <h3 id="mTitle">登記 週日</h3>
 
     <div id="claimFields">
       <label>稱呼（必填，刪除/換圖需用同一稱呼）</label>
@@ -294,7 +294,7 @@ function render(signups){
     }
     html += '</div>';
     if(editable){
-      html += '<button class="claim" data-day="'+d+'">＋ 我要認領'+DAY_NAMES[d]+'</button>';
+      html += '<button class="claim" data-day="'+d+'">＋ 我要登記'+DAY_NAMES[d]+'</button>';
     }
     card.innerHTML = html;
     grid.appendChild(card);
@@ -340,7 +340,7 @@ function openClaim(day){
   dialogMode='claim';
   targetDay=day; claimMode='fixed';
   document.getElementById('claimFields').style.display='block';
-  document.getElementById('mTitle').textContent='認領 '+DAY_NAMES[day];
+  document.getElementById('mTitle').textContent='登記 '+DAY_NAMES[day];
   document.getElementById('nameInput').value='';
   document.getElementById('goalInput').value='';
   document.querySelectorAll('.modebtn').forEach(x=>x.classList.toggle('on', x.dataset.mode==='fixed'));
