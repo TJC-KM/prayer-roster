@@ -75,6 +75,17 @@
   .hint{font-family:"PingFang TC",sans-serif;font-size:12px;color:var(--muted);margin:-4px 0 10px;}
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--card);font-family:"PingFang TC",sans-serif;font-size:14px;padding:11px 20px;border-radius:30px;opacity:0;transition:opacity .25s;z-index:60;pointer-events:none;}
   .toast.show{opacity:1;}
+  .person img{cursor:zoom-in;}
+  .lightbox{position:fixed;inset:0;background:rgba(20,16,10,.85);display:none;align-items:center;justify-content:center;padding:20px;z-index:70;cursor:zoom-out;}
+  .lightbox img{max-width:100%;max-height:92vh;background:#fff;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  .prayer{background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px var(--shadow);padding:14px 16px;margin-top:16px;}
+  .prayer-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
+  .prayer-title{font-size:17px;letter-spacing:2px;font-weight:600;}
+  .prayer-upd{font-family:"PingFang TC",sans-serif;font-size:11px;color:var(--muted);}
+  .prayer textarea{width:100%;min-height:150px;font-family:"PingFang TC",sans-serif;font-size:14px;line-height:1.6;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);resize:vertical;}
+  .prayer-row{display:flex;justify-content:flex-end;margin-top:10px;}
+  .prayer-row button{font-family:"PingFang TC",sans-serif;font-size:14px;padding:9px 18px;border-radius:7px;border:1px solid var(--ink);cursor:pointer;letter-spacing:1px;}
+  .prayer-row button:disabled{opacity:.4;cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -93,6 +104,17 @@
 
   <div class="readonly-note" id="roNote">📖 歷史紀錄（唯讀）— 切回本週即可報名</div>
   <div class="grid" id="grid"></div>
+
+  <div class="prayer">
+    <div class="prayer-head">
+      <span class="prayer-title">📝 代禱事項</span>
+      <span class="prayer-upd" id="prayerUpd"></span>
+    </div>
+    <textarea id="prayerText" placeholder="在此寫下本週代禱事項（大家共用，可一起編輯）…"></textarea>
+    <div class="prayer-row">
+      <button class="btn-go" id="prayerSave">儲存代禱事項</button>
+    </div>
+  </div>
 </div>
 
 <!-- 報名 / 換圖 視窗 -->
@@ -136,6 +158,10 @@
   </div>
 </div>
 
+<div class="lightbox" id="lightbox">
+  <img id="lightboxImg" src="" alt="放大簽名">
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -174,6 +200,7 @@ function init(data){
   VIEWING_WEEK = data.currentWeek;
   buildWeekSelector(data.weeks);
   render(data.signups);
+  if(data.prayer) setPrayer(data.prayer);
   startPolling();
 }
 
@@ -209,7 +236,7 @@ function render(signups){
       list.forEach(p=>{
         const canManage = editable && (p.type==='fixed' || p.type==='nweeks' || true);
         html += '<div class="person">'
-              + (p.img?'<img src="'+p.img+'" alt="圖">':'')
+              + (p.img?'<img src="'+p.img+'" alt="圖" data-zoom="'+p.img+'">':'')
               + '<div class="meta"><span class="nm">'+escapeHtml(p.name)
               + (p.badge?'<span class="badge">'+escapeHtml(p.badge)+'</span>':'')
               + '</span><span class="tm">'+escapeHtml(p.time)+'</span></div>'
@@ -238,6 +265,7 @@ function render(signups){
       };
     });
   }
+  grid.querySelectorAll('img[data-zoom]').forEach(im=>{ im.onclick = ()=>openLightbox(im.dataset.zoom); });
 }
 
 function startPolling(){
@@ -398,6 +426,24 @@ function doDelete(id, name){
     .then(s=>{ render(s); toast('已刪除'); })
     .catch(onErr);
 }
+
+/* ---------- 圖片放大 ---------- */
+const lightbox=document.getElementById('lightbox'), lightboxImg=document.getElementById('lightboxImg');
+function openLightbox(src){ if(!src)return; lightboxImg.src=src; lightbox.style.display='flex'; }
+lightbox.onclick=()=>{ lightbox.style.display='none'; lightboxImg.src=''; };
+
+/* ---------- 代禱事項 ---------- */
+function setPrayer(p){
+  document.getElementById('prayerText').value = p.text || '';
+  document.getElementById('prayerUpd').textContent = p.updated ? ('最後更新 '+p.updated) : '';
+}
+document.getElementById('prayerSave').onclick=()=>{
+  const btn=document.getElementById('prayerSave'), txt=document.getElementById('prayerText').value;
+  btn.disabled=true; btn.textContent='儲存中…';
+  api({action:'savePrayer', text:txt})
+    .then(p=>{ setPrayer(p); btn.disabled=false; btn.textContent='儲存代禱事項'; toast('代禱事項已儲存'); })
+    .catch(err=>{ btn.disabled=false; btn.textContent='儲存代禱事項'; onErr(err); });
+};
 
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}

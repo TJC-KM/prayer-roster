@@ -10,6 +10,7 @@ const SPREADSHEET_ID = 'PASTE_YOUR_SPREADSHEET_ID';
 // ⬆⬆⬆ ────────────────────────────────────────────────── ⬆⬆⬆
 
 const SHEET_NAME  = '認領紀錄v2'; // v2 新結構，與舊 7 欄分頁不相容，故用新分頁
+const PRAYER_SHEET = '代禱事項';   // 單一共用代禱文字，存於另一頁籤
 const FOLDER_NAME = '禱告認領簽名';
 const DAY_LABELS  = ['日', '一', '二', '三', '四', '五', '六']; // 0=週日 ... 6=週六
 
@@ -34,6 +35,8 @@ function doPost(e) {
       case 'submit':     data = submitSignup(req.day, req.name, req.img, req.mode, req.weeks); break;
       case 'remove':     data = removeSignup(req.id, req.name); break;
       case 'replaceImg': data = replaceImage(req.id, req.name, req.img); break;
+      case 'getPrayer':  data = getPrayer(); break;
+      case 'savePrayer': data = savePrayer(req.text); break;
       default: throw new Error('未知的動作：' + req.action);
     }
     return jsonOut_({ ok: true, data: data });
@@ -176,7 +179,38 @@ function getWeekList() {
 
 function getInitialData() {
   const cur = currentWeekKey_();
-  return { currentWeek: cur, weeks: getWeekList(), signups: getSignups(cur) };
+  return { currentWeek: cur, weeks: getWeekList(), signups: getSignups(cur), prayer: getPrayer() };
+}
+
+/* ---------- 代禱事項（單一共用文字，存 代禱事項 頁籤 A1） ---------- */
+
+function getPrayerSheet_() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sh = ss.getSheetByName(PRAYER_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(PRAYER_SHEET);
+    sh.getRange('A1').setValue('');
+    sh.getRange('B1').setValue(''); // 最後更新時間
+  }
+  return sh;
+}
+
+function getPrayer() {
+  const sh = getPrayerSheet_();
+  return {
+    text: String(sh.getRange('A1').getValue() || ''),
+    updated: sh.getRange('B1').getValue()
+      ? Utilities.formatDate(new Date(sh.getRange('B1').getValue()), Session.getScriptTimeZone(), 'MM/dd HH:mm')
+      : ''
+  };
+}
+
+function savePrayer(text) {
+  text = (text == null ? '' : String(text)).slice(0, 5000);
+  const sh = getPrayerSheet_();
+  sh.getRange('A1').setValue(text);
+  sh.getRange('B1').setValue(new Date());
+  return getPrayer();
 }
 
 /* ---------- 寫入 ---------- */
