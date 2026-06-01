@@ -1,0 +1,9 @@
+name = "prayer-roster"
+main = "src/index.js"
+compatibility_date = "2024-09-01"
+
+# D1 資料庫綁定。database_id 在 `wrangler d1 create` 後填入（見 README）。
+[[d1_databases]]
+binding = "DB"
+database_name = "prayer-roster"
+database_id = "PASTE_DATABASE_ID_HERE"

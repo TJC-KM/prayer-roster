@@ -39,6 +39,7 @@ function doPost(e) {
       case 'getPrayer':  data = getPrayer(); break;
       case 'savePrayer': data = savePrayer(req.text); break;
       case 'migrateImages': data = migrateImagesToDrive(); break;
+      case 'exportAll':  data = exportAll(); break;
       default: throw new Error('未知的動作：' + req.action);
     }
     return jsonOut_({ ok: true, data: data });
@@ -295,6 +296,31 @@ function migrateImagesToDrive() {
     } catch (e) { /* 單筆失敗略過，不中斷 */ }
   }
   return { migrated: migrated, total: n };
+}
+
+/** 匯出整張認領表 + 代禱事項，供搬遷到其它後端（D1）使用 */
+function exportAll() {
+  const sh = getSheet_();
+  const last = sh.getLastRow();
+  const rows = [];
+  if (last >= 2) {
+    const data = sh.getRange(2, 1, last - 1, HEADERS.length).getValues();
+    data.forEach(function (r) {
+      rows.push({
+        id: String(r[COL.id - 1]),
+        created: r[COL.created - 1] ? new Date(r[COL.created - 1]).getTime() : 0,
+        type: String(r[COL.type - 1]),
+        start: normWeek_(r[COL.start - 1]),
+        weeks: Number(r[COL.weeks - 1]) || 0,
+        day: Number(r[COL.day - 1]),
+        name: String(r[COL.name - 1]),
+        img: String(r[COL.img - 1] || ''),
+        goal: String(r[COL.goal - 1] || ''),
+        status: String(r[COL.status - 1] || 'active')
+      });
+    });
+  }
+  return { rows: rows, prayer: getPrayer() };
 }
 
 /** 報名：day 0-6、name、img(可空)、mode('once'|'fixed'|'nweeks')、weeks(N) */
