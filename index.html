@@ -207,13 +207,35 @@ window.addEventListener('load', () => {
   api({action:'init'}).then(init).catch(onErr);
 });
 
+const weekCache = {}; // key -> signups，前端快取避免每次都等 GAS
+
 function init(data){
   CURRENT_WEEK = data.currentWeek;
   VIEWING_WEEK = data.currentWeek;
+  ALL_WEEKS = (data.weeks || []).map(w => w.key);
+  weekCache[CURRENT_WEEK] = data.signups;
   buildWeekSelector(data.weeks);
   render(data.signups);
   if(data.prayer) setPrayer(data.prayer);
   startPolling();
+  prefetchWeeks();
+}
+
+let ALL_WEEKS = [];
+let prefetchTimer = null;
+// 首次載入後，依序在背景悄悄預抓其它週次，存進快取
+function prefetchWeeks(){
+  const pending = ALL_WEEKS.filter(k => !(k in weekCache));
+  let i = 0;
+  clearInterval(prefetchTimer);
+  prefetchTimer = setInterval(()=>{
+    if(i >= pending.length){ clearInterval(prefetchTimer); return; }
+    const k = pending[i++];
+    if(k in weekCache) return;
+    api({action:'getSignups', week:k})
+      .then(s=>{ weekCache[k] = s; })
+      .catch(()=>{});
+  }, 1500); // 每 1.5 秒抓一週，避免一次打爆 GAS
 }
 
 function buildWeekSelector(weeks){
@@ -231,11 +253,24 @@ function buildWeekSelector(weeks){
 
 function loadWeek(key){
   VIEWING_WEEK = key;
-  setLoading(true);
-  api({action:'getSignups', week:key})
-    .then(s=>{ if(VIEWING_WEEK===key){ render(s); } })
-    .catch(onErr)
-    .finally(()=>{ if(VIEWING_WEEK===key) setLoading(false); });
+  const cached = weekCache[key];
+  if(cached){
+    // 有快取：先秒顯示，背景悄悄重抓最新後無痕更新（不蓋載入中畫面）
+    render(cached);
+    setLoading(false);
+    document.getElementById('refresh').classList.add('spinning');
+    api({action:'getSignups', week:key})
+      .then(s=>{ weekCache[key]=s; if(VIEWING_WEEK===key) render(s); })
+      .catch(()=>{})
+      .finally(()=>{ if(VIEWING_WEEK===key) document.getElementById('refresh').classList.remove('spinning'); });
+  } else {
+    // 無快取：正常顯示載入中
+    setLoading(true);
+    api({action:'getSignups', week:key})
+      .then(s=>{ weekCache[key]=s; if(VIEWING_WEEK===key){ render(s); } })
+      .catch(onErr)
+      .finally(()=>{ if(VIEWING_WEEK===key) setLoading(false); });
+  }
 }
 
 function setLoading(on){
@@ -316,7 +351,7 @@ function startPolling(){
   clearInterval(pollTimer);
   pollTimer = setInterval(()=>{
     if(VIEWING_WEEK === CURRENT_WEEK && document.getElementById('mask').style.display!=='flex'){
-      api({action:'getSignups', week:CURRENT_WEEK}).then(s=>{ if(VIEWING_WEEK===CURRENT_WEEK) render(s); }).catch(()=>{});
+      api({action:'getSignups', week:CURRENT_WEEK}).then(s=>{ weekCache[CURRENT_WEEK]=s; if(VIEWING_WEEK===CURRENT_WEEK) render(s); }).catch(()=>{});
     }
   }, 30000);
 }
@@ -439,7 +474,7 @@ document.getElementById('submit').onclick=()=>{
     if(!hasInk){ toast('請先畫一張新圖'); return; }
     const btn=document.getElementById('submit'); btn.disabled=true; btn.textContent='更新中…';
     api({action:'replaceImg', id:replaceId, name:replaceName, img:exportSignature()})
-      .then(s=>{ closeModal(); btn.disabled=false; btn.textContent='更新圖片'; render(s); toast('圖片已更新'); })
+      .then(s=>{ closeModal(); btn.disabled=false; btn.textContent='更新圖片'; weekCache[VIEWING_WEEK]=s; render(s); toast('圖片已更新'); })
       .catch(err=>{ btn.disabled=false; btn.textContent='更新圖片'; onErr(err); });
     return;
   }
@@ -456,7 +491,7 @@ document.getElementById('submit').onclick=()=>{
   api({action:'submit', day:targetDay, name:name, img:img, mode:claimMode, weeks:weeks, goal:goal, week:VIEWING_WEEK})
     .then(s=>{
       closeModal(); btn.disabled=false; btn.textContent='送出報名';
-      render(s); toast('已完成認領，感謝您！');
+      weekCache[VIEWING_WEEK]=s; render(s); toast('已完成認領，感謝您！');
     })
     .catch(err=>{ btn.disabled=false; btn.textContent='送出報名'; onErr(err); });
 };
@@ -465,7 +500,7 @@ function doEditGoal(id, name, cur){
   const input=prompt('修改「'+name+'」的個人禱告目標：', cur||'');
   if(input===null) return;
   api({action:'editGoal', id:id, name:name, goal:input.trim()})
-    .then(s=>{ render(s); toast('已更新禱告目標'); })
+    .then(s=>{ weekCache[VIEWING_WEEK]=s; render(s); toast('已更新禱告目標'); })
     .catch(onErr);
 }
 
@@ -474,7 +509,7 @@ function doDelete(id, name){
   if(input===null) return;
   if(input.trim()!==name){ toast('稱呼不符，未刪除'); return; }
   api({action:'remove', id:id, name:input.trim()})
-    .then(s=>{ render(s); toast('已刪除'); })
+    .then(s=>{ weekCache[VIEWING_WEEK]=s; render(s); toast('已刪除'); })
     .catch(onErr);
 }
 
