@@ -237,6 +237,12 @@ window.addEventListener('load', () => {
 });
 
 const weekCache = {}; // key -> signups，前端快取避免每次都等 GAS
+const imgBust = {};   // signupId -> 時間戳，換圖後加版本參數逼瀏覽器重載
+function bustUrl(url, id){
+  const v = imgBust[id];
+  if(!v) return url;
+  return url + (url.indexOf('?')>=0 ? '&' : '?') + 'v=' + v;
+}
 
 function init(data){
   CURRENT_WEEK = data.currentWeek;
@@ -340,7 +346,7 @@ function render(signups){
       list.forEach(p=>{
         const canManage = editable && (p.type==='fixed' || p.type==='nweeks' || true);
         html += '<div class="person">'
-              + (p.img?'<img src="'+p.img+'" alt="圖" loading="lazy" data-zoom="'+p.img+'">':'')
+              + (p.img?(function(){var u=bustUrl(p.img,p.id);return '<img src="'+u+'" alt="圖" loading="lazy" data-zoom="'+u+'">';})():'')
               + '<div class="meta"><span class="nm">'+escapeHtml(p.name)
               + (p.badge?'<span class="badge">'+escapeHtml(p.badge)+'</span>':'')
               + '</span>'
@@ -503,7 +509,7 @@ document.getElementById('submit').onclick=()=>{
     if(!hasInk){ toast('請先畫一張新圖'); return; }
     const btn=document.getElementById('submit'); btn.disabled=true; btn.textContent='更新中…';
     api({action:'replaceImg', id:replaceId, name:replaceName, img:exportSignature()})
-      .then(s=>{ closeModal(); btn.disabled=false; btn.textContent='更新圖片'; weekCache[VIEWING_WEEK]=s; render(s); toast('圖片已更新'); })
+      .then(s=>{ imgBust[replaceId]=Date.now(); closeModal(); btn.disabled=false; btn.textContent='更新圖片'; weekCache[VIEWING_WEEK]=s; render(s); toast('圖片已更新'); })
       .catch(err=>{ btn.disabled=false; btn.textContent='更新圖片'; onErr(err); });
     return;
   }
