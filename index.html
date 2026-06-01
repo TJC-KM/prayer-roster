@@ -186,17 +186,46 @@ const COLORS = ['#1a1814','#d23b2e','#2e6fd2','#2fa14b','#e88b1a','#8e44ad'];
 const SIZES = [2.5, 5, 9];
 let CURRENT_WEEK = null, VIEWING_WEEK = null, pollTimer = null;
 
+/* ---- API 計時日誌：window.apiTimings 收集每次呼叫耗時，apiStats() 看分布 ---- */
+window.apiTimings = [];
 async function api(payload){
-  const res = await fetch(API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(payload),
-    redirect:'follow'
-  });
-  const json = await res.json();
-  if(!json.ok) throw new Error(json.error || '伺服器錯誤');
-  return json.data;
+  const t0 = performance.now();
+  const label = (payload && payload.action) + (payload && payload.week ? (' '+payload.week) : '');
+  let ok = true, errMsg = '';
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload),
+      redirect:'follow'
+    });
+    const json = await res.json();
+    if(!json.ok){ ok=false; errMsg=json.error||'伺服器錯誤'; throw new Error(errMsg); }
+    return json.data;
+  } catch(e){ ok=false; errMsg=errMsg||e.message; throw e; }
+  finally {
+    const ms = Math.round(performance.now() - t0);
+    window.apiTimings.push({ action: label, ms: ms, ok: ok, at: new Date().toLocaleTimeString() });
+    console.log('[API] ' + label + ' → ' + ms + 'ms' + (ok ? '' : ' ❌ '+errMsg));
+  }
 }
+/* 在 Console 輸入 apiStats() 看耗時分布；apiStats('getSignups') 只看某動作 */
+window.apiStats = function(filter){
+  let rows = window.apiTimings;
+  if(filter) rows = rows.filter(r => r.action.indexOf(filter) === 0);
+  if(!rows.length){ console.log('尚無資料'); return; }
+  const ms = rows.map(r=>r.ms).sort((a,b)=>a-b);
+  const sum = ms.reduce((a,b)=>a+b,0);
+  const pct = p => ms[Math.min(ms.length-1, Math.floor(p/100*ms.length))];
+  console.log('=== API 耗時分布 ('+rows.length+' 次) ===');
+  console.table(rows);
+  console.log('筆數='+ms.length+'  平均='+Math.round(sum/ms.length)+'ms  最小='+ms[0]+'  中位數(P50)='+pct(50)+'  P90='+pct(90)+'  最大='+ms[ms.length-1]+'ms');
+  // 依動作分組平均
+  const byAct = {};
+  rows.forEach(r=>{ const k=r.action.split(' ')[0]; (byAct[k]=byAct[k]||[]).push(r.ms); });
+  Object.keys(byAct).forEach(k=>{ const a=byAct[k]; console.log('  ['+k+'] '+a.length+'次 平均'+Math.round(a.reduce((x,y)=>x+y,0)/a.length)+'ms'); });
+  return rows;
+};
 
 window.addEventListener('load', () => {
   if(API_URL.indexOf('PASTE_YOUR') === 0){
