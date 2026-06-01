@@ -38,6 +38,7 @@ function doPost(e) {
       case 'editGoal':   data = editGoal(req.id, req.name, req.goal); break;
       case 'getPrayer':  data = getPrayer(); break;
       case 'savePrayer': data = savePrayer(req.text); break;
+      case 'migrateImages': data = migrateImagesToDrive(); break;
       default: throw new Error('未知的動作：' + req.action);
     }
     return jsonOut_({ ok: true, data: data });
@@ -238,14 +239,14 @@ function decodeMode_(mode, weeks) {
   return { type: 'once', weeks: 1 };
 }
 
-// 儲存格放圖的安全上限（Sheet 單格上限約 5 萬字元）
-const CELL_IMG_LIMIT = 45000;
+/** Drive fileId → 可內嵌的縮圖網址 */
+function driveImgUrl_(fileId) {
+  return 'https://lh3.googleusercontent.com/d/' + fileId;
+}
 
 /**
- * 存圖：一律備份 PNG 到 Drive。
- * 回傳 { cell, link, fileId }
- *   cell = 要寫進儲存格供前端顯示的字串：
- *          小圖→base64 原圖；大圖→Drive 公開內嵌連結（避免超過格子上限）
+ * 存圖：PNG 存到 Drive，一律回傳 Drive 內嵌連結（不再把 base64 塞進儲存格，縮小查詢回應）。
+ * 回傳 { cell, link, fileId }；cell = 前端 <img src> 用的 Drive 連結。
  */
 function saveImage_(name, day, week, imageDataUrl) {
   if (!imageDataUrl) return { cell: '', link: '', fileId: '' };
@@ -255,14 +256,45 @@ function saveImage_(name, day, week, imageDataUrl) {
   const fileName = week + '_週' + DAY_LABELS[day] + '_' + (name || '匿名') + '_' + stamp + '.png';
   const blob = Utilities.newBlob(Utilities.base64Decode(b64), 'image/png', fileName);
   const file = getFolder_().createFile(blob);
+  try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
+  const url = driveImgUrl_(file.getId());
+  return { cell: url, link: file.getUrl(), fileId: file.getId() };
+}
 
-  let cell = imageDataUrl;
-  if (imageDataUrl.length > CELL_IMG_LIMIT) {
-    // 太大：改用 Drive 公開內嵌連結
-    try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
-    cell = 'https://lh3.googleusercontent.com/d/' + file.getId();
+/**
+ * 一次性遷移：把舊的 base64 圖（H 欄）轉存成 Drive 連結。冪等，已是連結的跳過。
+ * 透過 action=migrateImages 觸發。回傳處理筆數。
+ */
+function migrateImagesToDrive() {
+  const sh = getSheet_();
+  const last = sh.getLastRow();
+  if (last < 2) return { migrated: 0, total: 0 };
+  const n = last - 1;
+  const imgs = sh.getRange(2, COL.img, n, 1).getValues();
+  const ids  = sh.getRange(2, COL.fileId, n, 1).getValues();
+  let migrated = 0;
+  for (let i = 0; i < n; i++) {
+    const cell = String(imgs[i][0] || '');
+    if (cell.indexOf('data:image/png;base64,') !== 0) continue; // 只處理 base64
+    let fileId = String(ids[i][0] || '');
+    try {
+      if (fileId) {
+        // 已有備份檔，直接設公開並改連結
+        DriveApp.getFileById(fileId).setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      } else {
+        // 沒有 fileId，重新存一份
+        const b64 = cell.split(',')[1];
+        const blob = Utilities.newBlob(Utilities.base64Decode(b64), 'image/png', 'migrated_' + (i + 2) + '.png');
+        const file = getFolder_().createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        fileId = file.getId();
+        sh.getRange(i + 2, COL.fileId).setValue(fileId);
+      }
+      sh.getRange(i + 2, COL.img).setValue(driveImgUrl_(fileId));
+      migrated++;
+    } catch (e) { /* 單筆失敗略過，不中斷 */ }
   }
-  return { cell: cell, link: file.getUrl(), fileId: file.getId() };
+  return { migrated: migrated, total: n };
 }
 
 /** 報名：day 0-6、name、img(可空)、mode('once'|'fixed'|'nweeks')、weeks(N) */

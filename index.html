@@ -340,7 +340,7 @@ function render(signups){
       list.forEach(p=>{
         const canManage = editable && (p.type==='fixed' || p.type==='nweeks' || true);
         html += '<div class="person">'
-              + (p.img?'<img src="'+p.img+'" alt="圖" data-zoom="'+p.img+'">':'')
+              + (p.img?'<img src="'+p.img+'" alt="圖" loading="lazy" data-zoom="'+p.img+'">':'')
               + '<div class="meta"><span class="nm">'+escapeHtml(p.name)
               + (p.badge?'<span class="badge">'+escapeHtml(p.badge)+'</span>':'')
               + '</span>'
