@@ -53,6 +53,11 @@
   .claim:hover{background:var(--accent);border-color:var(--accent);}
   .mask{position:fixed;inset:0;background:rgba(26,24,20,.5);display:none;align-items:center;justify-content:center;padding:14px;z-index:50;}
   .modal{background:var(--card);border-radius:10px;width:100%;max-width:560px;max-height:94vh;overflow:auto;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.3);}
+  /* 平板/桌機：視窗與畫布加大，畫畫空間更充足 */
+  @media(min-width:560px){
+    .modal{max-width:720px;}
+    #pad{height:clamp(300px,52vh,560px);}
+  }
   .modal h3{margin:0 0 12px;font-size:18px;letter-spacing:2px;}
   .modal label{font-family:"PingFang TC",sans-serif;font-size:13px;color:var(--muted);display:block;margin-bottom:6px;}
   .modal input[type=text]{width:100%;font-family:inherit;font-size:15px;padding:9px 11px;margin-bottom:12px;border:1px solid var(--line);border-radius:6px;background:#fff;}
