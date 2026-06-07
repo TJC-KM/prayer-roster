@@ -99,7 +99,8 @@
   .prayer-row{display:flex;justify-content:flex-end;margin-top:10px;}
   .prayer-row button{font-family:"PingFang TC",sans-serif;font-size:14px;padding:9px 18px;border-radius:7px;border:1px solid var(--ink);cursor:pointer;letter-spacing:1px;}
   .prayer-row button:disabled{opacity:.4;cursor:not-allowed;}
-  .modebar{display:flex;justify-content:center;margin:14px 0 4px;}
+  .modebar{display:flex;justify-content:center;align-items:center;gap:10px;margin:14px 0 4px;}
+  .modebar .meetbtn{margin-top:0;}
   .modetoggle{font-family:"PingFang TC",sans-serif;font-size:14px;letter-spacing:1px;padding:8px 18px;border-radius:24px;border:1px solid var(--line);background:var(--card);color:var(--accent);cursor:pointer;}
   .modetoggle:hover{background:#f0ece0;}
   /* 純閱讀大字區（一般模式隱藏） */
@@ -112,7 +113,6 @@
   body.viewmode .prayer-read{display:block;}
   body.viewmode .prayer{box-shadow:none;border-color:var(--line);}
   body.viewmode .prayer-read{font-size:clamp(20px,5.2vw,30px);line-height:2.1;}
-  body.viewmode .meetbtn{margin-top:8px;}
 </style>
 </head>
 <body>
@@ -120,13 +120,13 @@
   <header>
     <h1>禱告團契 每週固定禱告</h1>
     <div class="sub">每天晚上9:30~10:20 線上禱告</div>
-    <a class="meetbtn" href="https://meet.google.com/wfw-arii-kxw" target="_blank" rel="noopener">🎥 進入禱告室</a>
   </header>
 
   <div class="banner" id="cfgBanner">⚠️ 尚未設定後端網址：請打開原始碼，把最上方的 API_URL 換成你的 GAS /exec 網址。</div>
 
   <div class="modebar">
-    <button class="modetoggle" id="modeToggle">📖 純閱讀代禱</button>
+    <a class="meetbtn" href="https://meet.google.com/wfw-arii-kxw" target="_blank" rel="noopener">加入禱告</a>
+    <button class="modetoggle" id="modeToggle">投影模式</button>
   </div>
 
   <!-- 代禱事項：移到最前面 -->
@@ -597,7 +597,7 @@ function setPrayer(p){
 /* ---------- 模式切換：一般 ⇄ 純閱讀代禱 ---------- */
 document.getElementById('modeToggle').onclick = ()=>{
   const on = document.body.classList.toggle('viewmode');
-  document.getElementById('modeToggle').textContent = on ? '↩ 返回一般模式' : '📖 純閱讀代禱';
+  document.getElementById('modeToggle').textContent = on ? '返回一般模式' : '投影模式';
   window.scrollTo(0, 0);
   if(on){ // 進純閱讀時順手抓最新代禱
     api({action:'getPrayer'}).then(setPrayer).catch(()=>{});
