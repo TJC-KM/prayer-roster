@@ -99,6 +99,20 @@
   .prayer-row{display:flex;justify-content:flex-end;margin-top:10px;}
   .prayer-row button{font-family:"PingFang TC",sans-serif;font-size:14px;padding:9px 18px;border-radius:7px;border:1px solid var(--ink);cursor:pointer;letter-spacing:1px;}
   .prayer-row button:disabled{opacity:.4;cursor:not-allowed;}
+  .modebar{display:flex;justify-content:center;margin:14px 0 4px;}
+  .modetoggle{font-family:"PingFang TC",sans-serif;font-size:14px;letter-spacing:1px;padding:8px 18px;border-radius:24px;border:1px solid var(--line);background:var(--card);color:var(--accent);cursor:pointer;}
+  .modetoggle:hover{background:#f0ece0;}
+  /* 純閱讀大字區（一般模式隱藏） */
+  .prayer-read{display:none;white-space:pre-wrap;word-break:break-word;font-family:"PingFang TC",sans-serif;font-size:18px;line-height:2;color:var(--ink);padding:6px 2px;min-height:40px;}
+  .prayer-read .empty-read{color:#b3a98f;font-style:italic;}
+  /* ===== 純檢視模式 ===== */
+  body.viewmode #claimArea{display:none;}
+  body.viewmode #prayerText,
+  body.viewmode .prayer-row{display:none;}
+  body.viewmode .prayer-read{display:block;}
+  body.viewmode .prayer{box-shadow:none;border-color:var(--line);}
+  body.viewmode .prayer-read{font-size:clamp(20px,5.2vw,30px);line-height:2.1;}
+  body.viewmode .meetbtn{margin-top:8px;}
 </style>
 </head>
 <body>
@@ -110,24 +124,36 @@
   </header>
 
   <div class="banner" id="cfgBanner">⚠️ 尚未設定後端網址：請打開原始碼，把最上方的 API_URL 換成你的 GAS /exec 網址。</div>
-  <div class="weekbar">
-    <span style="font-family:'PingFang TC',sans-serif;font-size:13px;color:var(--muted)">週次</span>
-    <select id="weekSel"></select>
-    <button class="iconbtn" id="refresh" title="重新整理">⟳</button>
+
+  <div class="modebar">
+    <button class="modetoggle" id="modeToggle">📖 純閱讀代禱</button>
   </div>
 
-  <div class="readonly-note" id="roNote">📖 歷史紀錄（唯讀）— 切回本週即可報名</div>
-  <div class="grid" id="grid"></div>
-
+  <!-- 代禱事項：移到最前面 -->
   <div class="prayer">
     <div class="prayer-head">
       <span class="prayer-title">📝 代禱事項</span>
       <span class="prayer-upd" id="prayerUpd"></span>
     </div>
+    <!-- 純檢視用的只讀大字區 -->
+    <div class="prayer-read" id="prayerRead"></div>
+    <!-- 一般模式的編輯區 -->
     <textarea id="prayerText" placeholder="在此寫下本週代禱事項（大家共用，可一起編輯）…"></textarea>
     <div class="prayer-row">
       <button class="btn-go" id="prayerSave">儲存代禱事項</button>
     </div>
+  </div>
+
+  <!-- 以下為認領區，純檢視模式會整段隱藏 -->
+  <div id="claimArea">
+    <div class="weekbar">
+      <span style="font-family:'PingFang TC',sans-serif;font-size:13px;color:var(--muted)">週次</span>
+      <select id="weekSel"></select>
+      <button class="iconbtn" id="refresh" title="重新整理">⟳</button>
+    </div>
+
+    <div class="readonly-note" id="roNote">📖 歷史紀錄（唯讀）— 切回本週即可報名</div>
+    <div class="grid" id="grid"></div>
   </div>
 </div>
 
@@ -560,9 +586,23 @@ lightbox.onclick=()=>{ lightbox.style.display='none'; lightboxImg.src=''; };
 
 /* ---------- 代禱事項 ---------- */
 function setPrayer(p){
-  document.getElementById('prayerText').value = p.text || '';
+  const txt = p.text || '';
+  document.getElementById('prayerText').value = txt;
   document.getElementById('prayerUpd').textContent = p.updated ? ('最後更新 '+p.updated) : '';
+  const read = document.getElementById('prayerRead');
+  read.textContent = txt;
+  if(!txt) read.innerHTML = '<span class="empty-read">目前尚無代禱事項</span>';
 }
+
+/* ---------- 模式切換：一般 ⇄ 純閱讀代禱 ---------- */
+document.getElementById('modeToggle').onclick = ()=>{
+  const on = document.body.classList.toggle('viewmode');
+  document.getElementById('modeToggle').textContent = on ? '↩ 返回一般模式' : '📖 純閱讀代禱';
+  window.scrollTo(0, 0);
+  if(on){ // 進純閱讀時順手抓最新代禱
+    api({action:'getPrayer'}).then(setPrayer).catch(()=>{});
+  }
+};
 document.getElementById('prayerSave').onclick=()=>{
   const btn=document.getElementById('prayerSave'), txt=document.getElementById('prayerText').value;
   btn.disabled=true; btn.textContent='儲存中…';
