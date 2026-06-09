@@ -106,6 +106,11 @@
   /* 純閱讀大字區（一般模式隱藏） */
   .prayer-read{display:none;white-space:pre-wrap;word-break:break-word;font-family:"PingFang TC",sans-serif;font-size:18px;line-height:2;color:var(--ink);padding:6px 2px;min-height:40px;}
   .prayer-read .empty-read{color:#b3a98f;font-style:italic;}
+  .bell-row{display:none;justify-content:center;margin-top:18px;}
+  body.viewmode .bell-row{display:flex;}
+  .bellbtn{font-family:"PingFang TC",sans-serif;font-size:clamp(18px,4.5vw,24px);letter-spacing:2px;padding:14px 40px;border-radius:40px;border:1px solid var(--accent);background:var(--accent);color:var(--card);cursor:pointer;transition:transform .08s,background .2s;}
+  .bellbtn:hover{background:#76491f;}
+  .bellbtn:active{transform:scale(.94);}
   /* ===== 純檢視模式 ===== */
   body.viewmode #claimArea{display:none;}
   body.viewmode #prayerText,
@@ -137,6 +142,10 @@
     </div>
     <!-- 純檢視用的只讀大字區 -->
     <div class="prayer-read" id="prayerRead"></div>
+    <!-- 投影模式專用：敲鐘 -->
+    <div class="bell-row" id="bellRow">
+      <button class="bellbtn" id="bellBtn">🔔 敲鐘</button>
+    </div>
     <!-- 一般模式的編輯區 -->
     <textarea id="prayerText" placeholder="在此寫下本週代禱事項（大家共用，可一起編輯）…"></textarea>
     <div class="prayer-row">
@@ -603,6 +612,41 @@ document.getElementById('modeToggle').onclick = ()=>{
     api({action:'getPrayer'}).then(setPrayer).catch(()=>{});
   }
 };
+
+/* ---------- 敲鐘：Web Audio 合成三角鐵般「叮」聲 ---------- */
+let _audioCtx = null;
+function getAudioCtx(){
+  if(!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+function playBell(){
+  const ctx = getAudioCtx();
+  const t0 = ctx.currentTime;
+  // 三角鐵：高頻、含非整數泛音、快速衰減
+  const partials = [
+    { f: 5400, g: 1.0,  d: 1.6 },
+    { f: 8100, g: 0.55, d: 1.2 },
+    { f: 10600, g: 0.35, d: 0.9 },
+    { f: 13200, g: 0.2,  d: 0.7 }
+  ];
+  const master = ctx.createGain();
+  master.gain.value = 0.22;
+  master.connect(ctx.destination);
+  partials.forEach(p=>{
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = p.f;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(p.g, t0 + 0.004); // 快速起音
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + p.d); // 指數衰減
+    osc.connect(g); g.connect(master);
+    osc.start(t0);
+    osc.stop(t0 + p.d + 0.05);
+  });
+}
+document.getElementById('bellBtn').onclick = playBell;
 document.getElementById('prayerSave').onclick=()=>{
   const btn=document.getElementById('prayerSave'), txt=document.getElementById('prayerText').value;
   btn.disabled=true; btn.textContent='儲存中…';
