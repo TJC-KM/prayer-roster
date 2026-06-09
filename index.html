@@ -106,11 +106,10 @@
   /* 純閱讀大字區（一般模式隱藏） */
   .prayer-read{display:none;white-space:pre-wrap;word-break:break-word;font-family:"PingFang TC",sans-serif;font-size:18px;line-height:2;color:var(--ink);padding:6px 2px;min-height:40px;}
   .prayer-read .empty-read{color:#b3a98f;font-style:italic;}
-  .bell-row{display:none;justify-content:center;margin-top:18px;}
-  body.viewmode .bell-row{display:flex;}
-  .bellbtn{font-family:"PingFang TC",sans-serif;font-size:clamp(18px,4.5vw,24px);letter-spacing:2px;padding:14px 40px;border-radius:40px;border:1px solid var(--accent);background:var(--accent);color:var(--card);cursor:pointer;transition:transform .08s,background .2s;}
+  .bellbtn{display:none;font-size:18px;line-height:1;padding:8px 16px;border-radius:24px;border:1px solid var(--accent);background:var(--accent);color:var(--card);cursor:pointer;transition:transform .08s,background .2s;}
+  body.viewmode .bellbtn{display:inline-block;}
   .bellbtn:hover{background:#76491f;}
-  .bellbtn:active{transform:scale(.94);}
+  .bellbtn:active{transform:scale(.9);}
   /* ===== 純檢視模式 ===== */
   body.viewmode #claimArea{display:none;}
   body.viewmode #prayerText,
@@ -132,6 +131,7 @@
   <div class="modebar">
     <a class="meetbtn" href="https://meet.google.com/wfw-arii-kxw" target="_blank" rel="noopener">加入禱告</a>
     <button class="modetoggle" id="modeToggle">投影模式</button>
+    <button class="bellbtn" id="bellBtn" title="敲鐘">🔔</button>
   </div>
 
   <!-- 代禱事項：移到最前面 -->
@@ -142,10 +142,6 @@
     </div>
     <!-- 純檢視用的只讀大字區 -->
     <div class="prayer-read" id="prayerRead"></div>
-    <!-- 投影模式專用：敲鐘 -->
-    <div class="bell-row" id="bellRow">
-      <button class="bellbtn" id="bellBtn">🔔 敲鐘</button>
-    </div>
     <!-- 一般模式的編輯區 -->
     <textarea id="prayerText" placeholder="在此寫下本週代禱事項（大家共用，可一起編輯）…"></textarea>
     <div class="prayer-row">
