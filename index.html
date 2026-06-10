@@ -106,6 +106,9 @@
   /* 純閱讀大字區（一般模式隱藏） */
   .prayer-read{display:none;white-space:pre-wrap;word-break:break-word;font-family:"PingFang TC",sans-serif;font-size:18px;line-height:2;color:var(--ink);padding:6px 2px;min-height:40px;}
   .prayer-read .empty-read{color:#b3a98f;font-style:italic;}
+  /* 名單式：多欄填滿，避免右邊空白 */
+  body.viewmode .prayer-read.as-list{column-width:clamp(120px,30vw,220px);column-gap:28px;line-height:1.6;}
+  body.viewmode .prayer-read.as-list .pname{break-inside:avoid;padding:6px 0;border-bottom:1px dashed #e6dec9;text-align:center;}
   .bellbtn{display:none;font-size:18px;line-height:1;padding:8px 16px;border-radius:24px;border:1px solid var(--accent);background:var(--accent);color:var(--card);cursor:pointer;transition:transform .08s,background .2s;}
   body.viewmode .bellbtn{display:inline-block;}
   .bellbtn:hover{background:#76491f;}
@@ -594,9 +597,24 @@ function setPrayer(p){
   const txt = p.text || '';
   document.getElementById('prayerText').value = txt;
   document.getElementById('prayerUpd').textContent = p.updated ? ('最後更新 '+p.updated) : '';
+  renderPrayerRead(txt);
+}
+
+/* 投影模式只讀區渲染：名單式 → 多欄填滿；長句 → 整段 */
+function renderPrayerRead(txt){
   const read = document.getElementById('prayerRead');
-  read.textContent = txt;
-  if(!txt) read.innerHTML = '<span class="empty-read">目前尚無代禱事項</span>';
+  if(!txt){ read.className='prayer-read'; read.innerHTML='<span class="empty-read">目前尚無代禱事項</span>'; return; }
+  const lines = txt.split('\n').map(s=>s.trim()).filter(s=>s.length);
+  // 判斷是否名單式：行數多 且 大多數行很短（像名字）
+  const shortCount = lines.filter(s=>s.length<=14).length;
+  const isList = lines.length >= 4 && (shortCount / lines.length) >= 0.7;
+  if(isList){
+    read.className = 'prayer-read as-list';
+    read.innerHTML = lines.map(s=>'<div class="pname">'+escapeHtml(s)+'</div>').join('');
+  } else {
+    read.className = 'prayer-read';
+    read.textContent = txt;
+  }
 }
 
 /* ---------- 模式切換：一般 ⇄ 純閱讀代禱 ---------- */
