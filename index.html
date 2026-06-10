@@ -115,6 +115,8 @@
   body.viewmode .bellbtn{display:inline-block;}
   .bellbtn:hover{background:#76491f;}
   .bellbtn:active{transform:scale(.9);}
+  .bell-hint{display:none;text-align:center;font-family:"PingFang TC",sans-serif;font-size:11px;color:var(--muted);margin:4px 0 0;}
+  body.viewmode.is-mobile .bell-hint{display:block;}
   /* ===== 純檢視模式 ===== */
   body.viewmode #claimArea{display:none;}
   body.viewmode #prayerText,
@@ -138,6 +140,7 @@
     <button class="modetoggle" id="modeToggle">投影模式</button>
     <button class="bellbtn" id="bellBtn" title="敲鐘">🔔</button>
   </div>
+  <div class="bell-hint" id="bellHint">📱 手機分享可能無法傳出鈴聲，建議用電腦敲鐘</div>
 
   <!-- 代禱事項：移到最前面 -->
   <div class="prayer">
@@ -269,6 +272,7 @@ window.apiStats = function(filter){
 };
 
 window.addEventListener('load', () => {
+  if(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) document.body.classList.add('is-mobile');
   if(API_URL.indexOf('PASTE_YOUR') === 0){
     document.getElementById('cfgBanner').style.display = 'block';
     return;
