@@ -605,7 +605,7 @@ function setPrayer(p){
 /* 投影模式只讀區渲染：
    含稱謂（弟兄/姊妹/女士/先生/小朋友/小姐）且字數≤10 → 視為人名，集中最上、多欄並排；
    其餘或字數>10 → 列在最下方，整行不併排。 */
-const TITLE_RE = /(弟兄|姊妹|小朋友|女士|先生|小姐)/;
+const TITLE_RE = /(弟兄|姊妹|小朋友|女士|先生|小姐|長老|執事|傳道|牧師|阿姨|叔叔|媽媽|爸爸|哥哥|姊姊|弟弟|妹妹)/;
 function renderPrayerRead(txt){
   const read = document.getElementById('prayerRead');
   if(!txt){ read.className='prayer-read'; read.innerHTML='<span class="empty-read">目前尚無代禱事項</span>'; return; }
