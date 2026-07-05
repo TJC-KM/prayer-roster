@@ -111,10 +111,12 @@
   body.viewmode .prayer-read.as-structured .name-grid .pname{break-inside:avoid;padding:6px 0;border-bottom:1px dashed #e6dec9;text-align:center;}
   body.viewmode .prayer-read.as-structured .other-list{margin-top:22px;}
   body.viewmode .prayer-read.as-structured .other-list .pline{padding:8px 0;border-bottom:1px dashed #e6dec9;}
-  .bellbtn{display:none;font-size:18px;line-height:1;padding:8px 16px;border-radius:24px;border:1px solid var(--accent);background:var(--accent);color:var(--card);cursor:pointer;transition:transform .08s,background .2s;}
+  .bellbtn{display:none;font-size:18px;line-height:1;padding:8px 18px;border-radius:24px;border:1px solid var(--accent);background:var(--accent);color:var(--card);cursor:pointer;transition:transform .08s,background .2s,box-shadow .2s;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;-webkit-appearance:none;appearance:none;}
   body.viewmode .bellbtn{display:inline-block;}
   .bellbtn:hover{background:#76491f;}
-  .bellbtn:active{transform:scale(.9);}
+  .bellbtn:active{transform:scale(.88);background:#5f3a18;box-shadow:inset 0 2px 6px rgba(0,0,0,.4);}
+  .bellbtn.ring{animation:bellring .35s ease;}
+  @keyframes bellring{0%{transform:scale(.85);}40%{transform:scale(1.12);}100%{transform:scale(1);}}
   .bell-hint{display:none;text-align:center;font-family:"PingFang TC",sans-serif;font-size:11px;color:var(--muted);margin:4px 0 0;}
   body.viewmode.is-mobile .bell-hint{display:block;}
   /* ===== 純檢視模式 ===== */
@@ -673,7 +675,13 @@ function playBell(){
     osc.stop(t0 + p.d + 0.05);
   });
 }
-document.getElementById('bellBtn').onclick = playBell;
+(function(){
+  const bell = document.getElementById('bellBtn');
+  bell.addEventListener('click', ()=>{
+    playBell();
+    bell.classList.remove('ring'); void bell.offsetWidth; bell.classList.add('ring'); // 重觸發動畫
+  });
+})();
 document.getElementById('prayerSave').onclick=()=>{
   const btn=document.getElementById('prayerSave'), txt=document.getElementById('prayerText').value;
   btn.disabled=true; btn.textContent='儲存中…';
