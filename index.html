@@ -131,6 +131,8 @@
   body.viewmode .prayer-read{display:block;}
   body.viewmode .prayer{box-shadow:none;border-color:var(--line);}
   body.viewmode .prayer-read{font-size:clamp(20px,5.2vw,30px);line-height:2.1;}
+  /* 手機投影：頁面撐高一點，讓上滑手勢能收起瀏覽器網址列 */
+  body.viewmode.is-mobile{min-height:calc(100vh + 120px);}
 </style>
 </head>
 <body>
@@ -648,6 +650,15 @@ document.getElementById('modeToggle').onclick = ()=>{
   window.scrollTo(0, 0);
   if(on){ // 進純閱讀時順手抓最新代禱
     api({action:'getPrayer'}).then(setPrayer).catch(()=>{});
+    // 全螢幕可讓 Android Chrome 收起網址列；iOS Safari 不支援，靠頁面撐高讓使用者上滑收起
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if(req){ try{ const p = req.call(el); if(p && p.catch) p.catch(()=>{}); }catch(e){} }
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if((document.fullscreenElement || document.webkitFullscreenElement) && exit){
+      try{ const p = exit.call(document); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+    }
   }
 };
 
