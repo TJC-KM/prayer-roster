@@ -101,23 +101,27 @@
   .prayer{background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px var(--shadow);padding:14px 16px;margin-top:16px;}
   .prayer-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
   .prayer-title{font-size:17px;letter-spacing:2px;font-weight:600;}
-  .prayer-upd{font-family:"PingFang TC",sans-serif;font-size:11px;color:var(--muted);}
-  .prayer textarea{width:100%;min-height:150px;font-family:"PingFang TC",sans-serif;font-size:14px;line-height:1.6;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);resize:vertical;}
-  .prayer-row{display:flex;justify-content:flex-end;margin-top:10px;}
-  .prayer-row button{font-family:"PingFang TC",sans-serif;font-size:14px;padding:9px 18px;border-radius:7px;border:1px solid var(--ink);cursor:pointer;letter-spacing:1px;}
-  .prayer-row button:disabled{opacity:.4;cursor:not-allowed;}
+  .prayer-edit{font-family:"PingFang TC",sans-serif;font-size:12px;color:var(--accent);text-decoration:none;letter-spacing:1px;}
+  .prayer-edit:hover{text-decoration:underline;}
+  body.viewmode .prayer-edit{display:none;}
   .modebar{display:flex;justify-content:center;align-items:center;gap:10px;margin:14px 0 4px;}
   .modebar .meetbtn{margin-top:0;}
   .modetoggle{font-family:"PingFang TC",sans-serif;font-size:14px;letter-spacing:1px;padding:8px 18px;border-radius:24px;border:1px solid var(--line);background:var(--card);color:var(--accent);cursor:pointer;}
   .modetoggle:hover{background:#f0ece0;}
-  /* 純閱讀大字區（一般模式隱藏） */
-  .prayer-read{display:none;white-space:pre-wrap;word-break:break-word;font-family:"PingFang TC",sans-serif;font-size:18px;line-height:2;color:var(--ink);padding:6px 2px;min-height:40px;}
+  /* 代禱事項閱讀區（一般模式與投影模式共用，字級不同） */
+  .prayer-read{white-space:pre-wrap;word-break:break-word;font-family:"PingFang TC",sans-serif;font-size:15px;line-height:1.9;color:var(--ink);padding:6px 2px;min-height:40px;}
   .prayer-read .empty-read{color:#b3a98f;font-style:italic;}
-  /* 人名：多欄並排，集中最上；其餘：整行列最下方 */
-  body.viewmode .prayer-read.as-structured .name-grid{column-width:clamp(120px,30vw,220px);column-gap:28px;line-height:1.6;}
-  body.viewmode .prayer-read.as-structured .name-grid .pname{break-inside:avoid;padding:6px 0;border-bottom:1px dashed #e6dec9;text-align:center;}
-  body.viewmode .prayer-read.as-structured .other-list{margin-top:22px;}
-  body.viewmode .prayer-read.as-structured .other-list .pline{padding:8px 0;border-bottom:1px dashed #e6dec9;}
+  .psec{margin-bottom:12px;}
+  .psec:last-child{margin-bottom:0;}
+  .psec-title{font-size:13px;color:var(--accent);letter-spacing:3px;font-weight:600;margin-bottom:4px;border-bottom:1px solid var(--line);padding-bottom:3px;}
+  /* 人名：多欄並排 */
+  .psec .name-grid{column-width:clamp(110px,28vw,200px);column-gap:26px;line-height:1.6;}
+  .psec .name-grid .pname{break-inside:avoid;padding:5px 0;border-bottom:1px dashed #e6dec9;text-align:center;}
+  /* 事工等：整行列出 */
+  .psec .pline{padding:6px 0;border-bottom:1px dashed #e6dec9;}
+  .psec .pline:last-child{border-bottom:none;}
+  body.viewmode .psec-title{font-size:clamp(15px,3.4vw,20px);margin:14px 0 8px;}
+  body.viewmode .psec .name-grid .pname{padding:6px 0;}
   .bellbtn{display:none;font-size:18px;line-height:1;padding:8px 18px;border-radius:24px;border:1px solid var(--accent);background:var(--accent);color:var(--card);cursor:pointer;transition:transform .08s,background .2s,box-shadow .2s;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;-webkit-appearance:none;appearance:none;}
   body.viewmode .bellbtn{display:inline-block;}
   .bellbtn:hover{background:#76491f;}
@@ -133,9 +137,6 @@
   body.viewmode .verse-ref{font-size:14px;}
   /* ===== 純檢視模式 ===== */
   body.viewmode #claimArea{display:none;}
-  body.viewmode #prayerText,
-  body.viewmode .prayer-row{display:none;}
-  body.viewmode .prayer-read{display:block;}
   body.viewmode .prayer{box-shadow:none;border-color:var(--line);}
   body.viewmode .prayer-read{font-size:clamp(20px,5.2vw,30px);line-height:2.1;}
   /* 手機投影：頁面撐高一點，讓上滑手勢能收起瀏覽器網址列 */
@@ -162,19 +163,13 @@
     <div class="verse-ref">— 腓立比書 4:6</div>
   </div>
 
-  <!-- 代禱事項：移到最前面 -->
+  <!-- 代禱事項：資料來自 Google 試算表三個頁籤的 A 欄 -->
   <div class="prayer">
     <div class="prayer-head">
       <span class="prayer-title">📝 代禱事項</span>
-      <span class="prayer-upd" id="prayerUpd"></span>
+      <a class="prayer-edit" id="prayerEdit" href="#" target="_blank" rel="noopener">在試算表編輯 ↗</a>
     </div>
-    <!-- 純檢視用的只讀大字區 -->
-    <div class="prayer-read" id="prayerRead"></div>
-    <!-- 一般模式的編輯區 -->
-    <textarea id="prayerText" placeholder="在此寫下本週代禱事項（大家共用，可一起編輯）…"></textarea>
-    <div class="prayer-row">
-      <button class="btn-go" id="prayerSave">儲存代禱事項</button>
-    </div>
+    <div class="prayer-read" id="prayerRead"><span class="empty-read">載入中…</span></div>
   </div>
 
   <!-- 以下為認領區，純檢視模式會整段隱藏 -->
@@ -299,6 +294,9 @@ window.addEventListener('load', () => {
   }
   buildTools();
   api({action:'init'}).then(init).catch(onErr);
+  loadPrayer();
+  clearInterval(prayerTimer);
+  prayerTimer = setInterval(loadPrayer, 60000); // 每分鐘同步試算表
 });
 
 const weekCache = {}; // key -> signups，前端快取避免每次都等 GAS
@@ -316,7 +314,6 @@ function init(data){
   weekCache[CURRENT_WEEK] = data.signups;
   buildWeekSelector(data.weeks);
   render(data.signups);
-  if(data.prayer) setPrayer(data.prayer);
   startPolling();
   prefetchWeeks();
 }
@@ -618,36 +615,57 @@ const lightbox=document.getElementById('lightbox'), lightboxImg=document.getElem
 function openLightbox(src){ if(!src)return; lightboxImg.src=src; lightbox.style.display='flex'; }
 lightbox.onclick=()=>{ lightbox.style.display='none'; lightboxImg.src=''; };
 
-/* ---------- 代禱事項 ---------- */
-function setPrayer(p){
-  const txt = p.text || '';
-  document.getElementById('prayerText').value = txt;
-  document.getElementById('prayerUpd').textContent = p.updated ? ('最後更新 '+p.updated) : '';
-  renderPrayerRead(txt);
+/* ---------- 代禱事項：來自 Google 試算表三個頁籤的 A 欄 ---------- */
+const PRAYER_SHEET_ID = '1hl8-L9KOFU1fLyJGGMfAB5cFjZ2fJZWrrVeR34NcQww';
+const PRAYER_TABS = [
+  { sheet:'近期代禱',     title:'近期代禱', asNames:true  },
+  { sheet:'長期關懷代禱', title:'長期關懷', asNames:true  },
+  { sheet:'近期事工',     title:'近期事工', asNames:false }
+];
+document.getElementById('prayerEdit').href =
+  'https://docs.google.com/spreadsheets/d/' + PRAYER_SHEET_ID + '/edit';
+
+/* gviz CSV：A2 起抓（跳過標題列），解析單欄 CSV */
+function fetchTabColA(sheetName){
+  const url = 'https://docs.google.com/spreadsheets/d/' + PRAYER_SHEET_ID
+            + '/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent(sheetName) + '&range=A2:A200';
+  return fetch(url).then(r=>{
+    if(!r.ok) throw new Error('讀取試算表失敗 ('+r.status+')');
+    return r.text();
+  }).then(text =>
+    text.split('\n')
+      .map(line => line.replace(/\r$/,'').trim())
+      .map(line => {
+        const m = line.match(/^"(.*)"$/);
+        return (m ? m[1].replace(/""/g,'"') : line).trim();
+      })
+      .filter(s => s.length)
+  );
 }
 
-/* 投影模式只讀區渲染：
-   含稱謂（弟兄/姊妹/女士/先生/小朋友/小姐）且字數≤10 → 視為人名，集中最上、多欄並排；
-   其餘或字數>10 → 列在最下方，整行不併排。 */
-const TITLE_RE = /(弟兄|姊妹|姐妹|小朋友|女士|先生|小姐|長老|執事|傳道|牧師|阿姨|叔叔|媽媽|爸爸|哥哥|姊姊|弟弟|妹妹)/;
-function renderPrayerRead(txt){
-  const read = document.getElementById('prayerRead');
-  if(!txt){ read.className='prayer-read'; read.innerHTML='<span class="empty-read">目前尚無代禱事項</span>'; return; }
-  const lines = txt.split('\n').map(s=>s.trim()).filter(s=>s.length);
-  const names = [], others = [];
-  lines.forEach(s=>{
-    if(TITLE_RE.test(s) && s.length <= 10) names.push(s);
-    else others.push(s);
-  });
-  let html = '';
-  if(names.length){
-    html += '<div class="name-grid">' + names.map(s=>'<div class="pname">'+escapeHtml(s)+'</div>').join('') + '</div>';
-  }
-  if(others.length){
-    html += '<div class="other-list">' + others.map(s=>'<div class="pline">'+escapeHtml(s)+'</div>').join('') + '</div>';
-  }
-  read.className = 'prayer-read as-structured';
-  read.innerHTML = html || '<span class="empty-read">目前尚無代禱事項</span>';
+let prayerTimer = null;
+function loadPrayer(){
+  return Promise.all(PRAYER_TABS.map(t => fetchTabColA(t.sheet).catch(()=>null)))
+    .then(results => {
+      const read = document.getElementById('prayerRead');
+      if(results.every(r => r === null)){
+        read.innerHTML = '<span class="empty-read">無法載入代禱事項，請稍後再試</span>';
+        return;
+      }
+      let html = '';
+      PRAYER_TABS.forEach((t, i) => {
+        const items = results[i] || [];
+        if(!items.length) return;
+        html += '<div class="psec"><div class="psec-title">' + escapeHtml(t.title) + '</div>';
+        if(t.asNames){
+          html += '<div class="name-grid">' + items.map(s=>'<div class="pname">'+escapeHtml(s)+'</div>').join('') + '</div>';
+        } else {
+          html += items.map(s=>'<div class="pline">'+escapeHtml(s)+'</div>').join('');
+        }
+        html += '</div>';
+      });
+      read.innerHTML = html || '<span class="empty-read">目前尚無代禱事項</span>';
+    });
 }
 
 /* ---------- 模式切換：一般 ⇄ 純閱讀代禱 ---------- */
@@ -656,7 +674,7 @@ document.getElementById('modeToggle').onclick = ()=>{
   document.getElementById('modeToggle').textContent = on ? '返回一般模式' : '投影模式';
   window.scrollTo(0, 0);
   if(on){ // 進純閱讀時順手抓最新代禱
-    api({action:'getPrayer'}).then(setPrayer).catch(()=>{});
+    loadPrayer();
     // 全螢幕可讓 Android Chrome 收起網址列；iOS Safari 不支援，靠頁面撐高讓使用者上滑收起
     const el = document.documentElement;
     const req = el.requestFullscreen || el.webkitRequestFullscreen;
@@ -709,13 +727,6 @@ function playBell(){
     bell.classList.remove('ring'); void bell.offsetWidth; bell.classList.add('ring'); // 重觸發動畫
   });
 })();
-document.getElementById('prayerSave').onclick=()=>{
-  const btn=document.getElementById('prayerSave'), txt=document.getElementById('prayerText').value;
-  btn.disabled=true; btn.textContent='儲存中…';
-  api({action:'savePrayer', text:txt})
-    .then(p=>{ setPrayer(p); btn.disabled=false; btn.textContent='儲存代禱事項'; toast('代禱事項已儲存'); })
-    .catch(err=>{ btn.disabled=false; btn.textContent='儲存代禱事項'; onErr(err); });
-};
 
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
