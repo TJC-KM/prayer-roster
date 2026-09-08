@@ -176,8 +176,8 @@
   </div>
   <!-- 固定經文 -->
   <div class="verse">
-    <div class="verse-text"><span class="seg">應當一無掛慮，</span><span class="seg">只要凡事藉著禱告、祈求和感謝，</span><span class="seg">將你們所要的告訴神。</span></div>
-    <div class="verse-ref">— 腓立比書 4:6</div>
+    <div class="verse-text" id="verseText"><span class="seg">應當一無掛慮，</span><span class="seg">只要凡事藉著禱告、祈求和感謝，</span><span class="seg">將你們所要的告訴神。</span></div>
+    <div class="verse-ref" id="verseRef">— 腓立比書 4:6</div>
   </div>
 
   <!-- 代禱事項：資料來自 Google 試算表三個頁籤的 A 欄 -->
@@ -678,9 +678,31 @@ function fetchTabItems(sheetName){
   );
 }
 
+/* 經文：讀「規範說明」頁籤 A 欄=「經文」的列。
+   一筆：B=內容、C=出處；或兩筆都標「經文」：第一筆 B=內容、第二筆 B=出處。
+   讀不到就維持頁面內建的預設經文。 */
+function loadVerse(){
+  const url = 'https://docs.google.com/spreadsheets/d/' + PRAYER_SHEET_ID
+            + '/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent('規範說明') + '&range=A1:C50';
+  return fetch(url).then(r=>{ if(!r.ok) throw new Error(); return r.text(); }).then(text=>{
+    const rows = parseCsv(text).filter(r => String(r[0]||'').trim() === '經文');
+    if(!rows.length) return;
+    const content = String(rows[0][1]||'').trim();
+    let ref = String(rows[0][2]||'').trim();
+    if(!ref && rows[1]) ref = String(rows[1][1]||'').trim();
+    if(!content) return;
+    // 依標點切段，投影模式一段一行
+    const segs = content.match(/[^，。；！？]+[，。；！？]?/g) || [content];
+    document.getElementById('verseText').innerHTML =
+      segs.map(s=>'<span class="seg">'+escapeHtml(s)+'</span>').join('');
+    document.getElementById('verseRef').textContent = ref ? (ref.charAt(0)==='—' ? ref : '— '+ref) : '';
+  }).catch(()=>{});
+}
+
 let prayerTimer = null;
 let PRAYER_DATA = null; // [{title, asNames, items:[{text,note}]}]，供列印使用
 function loadPrayer(){
+  loadVerse();
   return Promise.all(PRAYER_TABS.map(t => fetchTabItems(t.sheet).catch(()=>null)))
     .then(results => {
       const read = document.getElementById('prayerRead');
