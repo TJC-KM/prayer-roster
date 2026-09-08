@@ -101,7 +101,7 @@
   .prayer{background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px var(--shadow);padding:14px 16px;margin-top:16px;}
   .prayer-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;}
   .prayer-title{font-size:17px;letter-spacing:2px;font-weight:600;}
-  .prayer-note{font-family:"PingFang TC",sans-serif;font-size:12px;color:var(--muted);letter-spacing:1px;}
+  .prayer-note{font-family:"PingFang TC",sans-serif;font-size:12px;color:var(--muted);letter-spacing:1px;text-align:right;margin-top:10px;padding-top:8px;border-top:1px dashed #e6dec9;}
   .prayer-edit{color:var(--accent);text-decoration:none;}
   .prayer-edit:hover{text-decoration:underline;}
   .printbtn{font-family:"PingFang TC",sans-serif;font-size:12px;color:var(--accent);background:none;border:none;padding:0;cursor:pointer;letter-spacing:1px;}
@@ -184,9 +184,9 @@
   <div class="prayer">
     <div class="prayer-head">
       <span class="prayer-title">📝 代禱事項</span>
-      <span class="prayer-note">於關懷系統維護 · <a class="prayer-edit" id="prayerEdit" href="#" target="_blank" rel="noopener">試算表 ↗</a> · <button class="printbtn" id="printBtn">列印 🖨</button></span>
     </div>
     <div class="prayer-read" id="prayerRead"><span class="empty-read">載入中…</span></div>
+    <div class="prayer-note">於關懷系統維護 · <a class="prayer-edit" id="prayerEdit" href="#" target="_blank" rel="noopener">試算表 ↗</a> · <button class="printbtn" id="printBtn">列印 🖨</button></div>
   </div>
 
   <!-- 以下為認領區，純檢視模式會整段隱藏 -->
