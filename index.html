@@ -120,6 +120,7 @@
     #printArea .p-item{font-size:11.5pt;padding:3pt 0;border-bottom:.5pt dashed #bbb;}
     #printArea .p-item:last-child{border-bottom:none;}
     #printArea .p-note{font-size:9.5pt;color:#444;margin-left:1em;}
+    #printArea .p-grid2{display:grid;grid-template-columns:1fr 1fr;column-gap:24pt;}
   }
   .modebar{display:flex;justify-content:center;align-items:center;gap:10px;margin:14px 0 4px;}
   .modebar .meetbtn{margin-top:0;}
@@ -639,7 +640,7 @@ lightbox.onclick=()=>{ lightbox.style.display='none'; lightboxImg.src=''; };
 const PRAYER_SHEET_ID = '1hl8-L9KOFU1fLyJGGMfAB5cFjZ2fJZWrrVeR34NcQww';
 const PRAYER_TABS = [
   { sheet:'近期代禱',     title:'近期代禱', asNames:true  },
-  { sheet:'長期關懷代禱', title:'長期關懷', asNames:true  },
+  { sheet:'長期關懷代禱', title:'長期關懷', asNames:true, printCols:2 },
   { sheet:'近期事工',     title:'近期事工', asNames:false }
 ];
 document.getElementById('prayerEdit').href =
@@ -710,7 +711,7 @@ function loadPrayer(){
         read.innerHTML = '<span class="empty-read">無法載入代禱事項，請稍後再試</span>';
         return;
       }
-      PRAYER_DATA = PRAYER_TABS.map((t, i) => ({ title:t.title, asNames:t.asNames, items:results[i]||[] }));
+      PRAYER_DATA = PRAYER_TABS.map((t, i) => ({ title:t.title, asNames:t.asNames, printCols:t.printCols||1, items:results[i]||[] }));
       let html = '';
       PRAYER_DATA.forEach(sec => {
         if(!sec.items.length) return;
@@ -736,10 +737,11 @@ function buildPrintArea(){
   (PRAYER_DATA||[]).forEach(sec => {
     if(!sec.items.length) return;
     html += '<div class="p-sec"><div class="p-sec-title">'+escapeHtml(sec.title)+'</div>';
-    html += sec.items.map(it =>
+    const rows = sec.items.map(it =>
       '<div class="p-item">'+escapeHtml(it.text)
       + (it.note ? '<span class="p-note">— '+escapeHtml(it.note).replace(/\n/g,'<br>')+'</span>' : '')
       + '</div>').join('');
+    html += (sec.printCols === 2) ? '<div class="p-grid2">'+rows+'</div>' : rows;
     html += '</div>';
   });
   area.innerHTML = html;
