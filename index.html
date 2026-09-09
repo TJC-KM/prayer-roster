@@ -731,7 +731,7 @@ function buildPrintArea(){
   const area = document.getElementById('printArea');
   const now = new Date();
   const dateStr = now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate();
-  let html = '<div class="p-title">黎明教會 禱告團契 — 代禱事項</div>'
+  let html = '<div class="p-title">黎明教會 — 代禱事項</div>'
            + '<div class="p-date">列印日期 '+dateStr+'</div>';
   (PRAYER_DATA||[]).forEach(sec => {
     if(!sec.items.length) return;
