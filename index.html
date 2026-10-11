@@ -188,7 +188,7 @@
       <span class="prayer-title">📝 代禱事項</span>
     </div>
     <div class="prayer-read" id="prayerRead"><span class="empty-read">載入中…</span></div>
-    <div class="prayer-note">於關懷系統維護 · <a class="prayer-edit" id="prayerEdit" href="#" target="_blank" rel="noopener">試算表 ↗</a> · <button class="printbtn" id="printBtn">列印 🖨</button></div>
+    <div class="prayer-note">於關懷系統維護 · <a class="prayer-edit" id="prayerEdit" href="#" target="_blank" rel="noopener">維護 ↗</a> · <button class="printbtn" id="printBtn">列印 🖨</button></div>
   </div>
 
   <!-- 以下為認領區，純檢視模式會整段隱藏 -->
@@ -644,8 +644,7 @@ const PRAYER_TABS = [
   { sheet:'長期關懷代禱', title:'長期關懷', asNames:true, printCols:2 },
   { sheet:'近期事工',     title:'近期事工', asNames:false }
 ];
-document.getElementById('prayerEdit').href =
-  'https://docs.google.com/spreadsheets/d/' + PRAYER_SHEET_ID + '/edit';
+document.getElementById('prayerEdit').href = 'https://li-ming-tjc.org/prayer';
 
 /* 完整 CSV 解析（備註欄可能含逗號、引號或換行） */
 function parseCsv(text){
